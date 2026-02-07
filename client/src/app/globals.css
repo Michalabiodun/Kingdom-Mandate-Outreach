@@ -1,19 +1,37 @@
 @import "tailwindcss";
 
+@theme {
+  --breakpoint-container: 1280px;
+  --animate-marquee: marquee var(--duration) linear infinite;
+  --animate-marquee-reverse: marquee-reverse var(--duration) linear infinite;
+
+  @keyframes marquee {
+    from {
+      transform: translateX(0);
+    }
+
+    to {
+      transform: translateX(calc(-100% - var(--gap)));
+    }
+  }
+
+  @keyframes marquee-reverse {
+    from {
+      transform: translateX(calc(-100% - var(--gap)));
+    }
+
+    to {
+      transform: translateX(0);
+    }
+  }
+}
+
 @font-face {
   font-family: "Material Symbols Outlined";
   font-style: normal;
   font-weight: 100 700;
   font-display: swap;
-  src: url("https://fonts.gstatic.com/s/materialsymbolsoutlined/v312/kJEPBvYX7BgnkSrUwT8OhrdQw4oELdPIeeII9v6oDMzBwG-RpA6RzaxHMPdY40KH8nGzv3fzfVJO1Q.woff2")
-    format("woff2");
-}
-
-@theme {
-  --color-accent-primary: #0044CC;
-  --color-accent-secondary: #243B53;
-  --color-text-main: #102A43;
-  --color-text-muted: #486581;
+  src: url("https://fonts.gstatic.com/s/materialsymbolsoutlined/v312/kJEPBvYX7BgnkSrUwT8OhrdQw4oELdPIeeII9v6oDMzBwG-RpA6RzaxHMPdY40KH8nGzv3fzfVJO1Q.woff2") format("woff2");
 }
 
 :root {
@@ -55,6 +73,7 @@
     white-space: nowrap;
     word-wrap: normal;
     direction: ltr;
+    font-feature-settings: "liga";
     -webkit-font-feature-settings: "liga";
     -webkit-font-smoothing: antialiased;
     font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;

@@ -4,7 +4,33 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState, useSyncExternalStore } from "react";
 
-export default function Dashboard() {
+const profileTabs = ["General", "Security", "Notifications", "Billing"];
+
+const connectedAccounts = [
+  { name: "Google Account", status: "Connected", active: true, icon: "public" },
+  { name: "Ministry Calendar", status: "Not Linked", active: false, icon: "calendar_month" },
+  { name: "Partner Tools", status: "Connected", active: true, icon: "handshake" },
+];
+
+const notificationPreferences = [
+  {
+    title: "Spiritual Growth Updates",
+    description: "Receive daily devotionals and growth tracks",
+    active: true,
+  },
+  {
+    title: "Community Mentorship Alerts",
+    description: "Get notified when a mentee requests guidance",
+    active: true,
+  },
+  {
+    title: "Weekly Ministry Reports",
+    description: "Email summary of global mandate progress",
+    active: false,
+  },
+];
+
+export default function ProfileSettingsPage() {
   const router = useRouter();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
@@ -157,7 +183,7 @@ export default function Dashboard() {
         <nav className="flex flex-col gap-1 px-4">
           <Link
             href="/dashboard"
-            className="flex items-center gap-3 rounded-xl bg-[#2f5be7] text-white px-4 py-3 text-sm font-semibold"
+            className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold text-[#5b6b83] hover:bg-[#f1f4ff]"
             onClick={() => setIsSidebarOpen(false)}
           >
             <span className="material-symbols-outlined text-lg">home</span>
@@ -243,7 +269,7 @@ export default function Dashboard() {
         <nav className="flex flex-col gap-1 px-4">
           <Link
             href="/dashboard"
-            className="flex items-center gap-3 rounded-xl bg-[#2f5be7] text-white px-4 py-3 text-sm font-semibold"
+            className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold text-[#5b6b83] hover:bg-[#f1f4ff]"
           >
             <span className="material-symbols-outlined text-lg">home</span>
             Home
@@ -321,7 +347,7 @@ export default function Dashboard() {
               </span>
               <input
                 className="w-full bg-transparent text-sm text-[#1f2a44] outline-none"
-                placeholder="Search scriptures, courses, or events..."
+                placeholder="Search settings..."
                 type="text"
               />
             </div>
@@ -347,166 +373,182 @@ export default function Dashboard() {
             </Link>
           </div>
         </header>
-        <main className="flex-1 px-4 py-5 md:px-6 md:py-6 lg:px-10 lg:py-8">
-          <div className="grid grid-cols-1 gap-6 xl:grid-cols-[1fr_300px]">
-            <div className="flex flex-col gap-6">
-              <section className="rounded-3xl border border-[#e8ebf3] bg-white p-6 lg:p-8 shadow-sm">
-                <div className="inline-flex items-center gap-2 rounded-full border border-[#d6e2ff] bg-[#eff4ff] px-3 py-1 text-xs font-semibold text-[#2f5be7]">
-                  <span className="size-2 rounded-full bg-[#2f5be7]"></span>
-                  Active Track
-                </div>
-                <div className="mt-4 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+        <main className="flex-1 px-4 py-6 md:px-6 lg:px-10 lg:py-10">
+          <div className="mx-auto w-full max-w-6xl">
+            <div className="grid grid-cols-1 gap-6 lg:grid-cols-[260px_1fr]">
+              <aside className="rounded-3xl border border-[#e6ebf3] bg-white p-5 shadow-sm">
+                <div className="flex items-center gap-3">
+                  <div className="size-12 rounded-full bg-[#e9eefc] text-[#2f5be7] flex items-center justify-center">
+                    <span className="material-symbols-outlined text-xl">person</span>
+                  </div>
                   <div>
-                    <h1 className="text-2xl md:text-4xl font-black text-[#0e121b]">
-                      Welcome back,
-                      <span className="block text-[#2f5be7]">Leader {userName}</span>
-                    </h1>
-                    <p className="mt-3 text-sm md:text-base text-[#5b6b83]">
-                      You are currently excelling in the <span className="font-semibold italic">Apostolic Foundation</span> leadership path. Continue your journey to achieve your goals.
+                    <p className="text-sm font-bold text-[#0f172a]">{userName}</p>
+                    <p className="text-[10px] font-semibold text-[#2f5be7] uppercase tracking-[0.2em]">
+                      Leadership Tier
                     </p>
                   </div>
-                  <div className="flex flex-col sm:flex-row flex-wrap gap-3">
-                    <button className="rounded-xl bg-[#2f5be7] px-5 py-3 text-sm font-semibold text-white shadow-md hover:brightness-110 w-full sm:w-auto">
-                      Resume Course
-                    </button>
-                    <button className="rounded-xl border border-[#e8ebf3] px-5 py-3 text-sm font-semibold text-[#1f2a44] hover:bg-[#f7f9fc] w-full sm:w-auto">
-                      View Full Path
-                    </button>
-                  </div>
                 </div>
-              </section>
-              <section className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
-                <div className="rounded-2xl border border-[#e8ebf3] bg-[#eef3ff] p-5">
-                  <div className="size-10 rounded-xl bg-[#2f5be7]/10 text-[#2f5be7] flex items-center justify-center">
-                    <span className="material-symbols-outlined">event_available</span>
-                  </div>
-                  <h3 className="mt-4 text-base font-bold text-[#0e121b]">Book a Session</h3>
-                  <p className="mt-2 text-sm text-[#5b6b83]">
-                    Schedule a 1-on-1 mentorship call with a ministry senior.
-                  </p>
-                </div>
-                <div className="rounded-2xl border border-[#e8ebf3] bg-[#eef3ff] p-5">
-                  <div className="size-10 rounded-xl bg-[#2f5be7]/10 text-[#2f5be7] flex items-center justify-center">
-                    <span className="material-symbols-outlined">volunteer_activism</span>
-                  </div>
-                  <h3 className="mt-4 text-base font-bold text-[#0e121b]">Request Prayer</h3>
-                  <p className="mt-2 text-sm text-[#5b6b83]">
-                    Submit your prayer requests to our dedicated intercession team.
-                  </p>
-                </div>
-                <div className="rounded-2xl border border-[#e8ebf3] bg-white p-5 flex items-center justify-between md:col-span-2 xl:col-span-1">
-                  <div>
-                    <p className="text-xs font-semibold tracking-[0.2em] text-[#8fa1b6]">
-                      Profile Maturity
-                    </p>
-                    <p className="mt-3 text-2xl font-black text-[#0e121b]">65%</p>
-                    <p className="text-xs text-[#5b6b83] uppercase font-semibold">Complete</p>
-                  </div>
-                  <div className="size-20 rounded-full border-[6px] border-[#e8ebf3] border-t-[#2f5be7] rotate-45"></div>
-                </div>
-              </section>
-              <section className="rounded-3xl border border-[#e8ebf3] bg-white p-6">
-                <div className="flex items-center justify-between">
-                  <h3 className="text-lg font-bold text-[#0e121b]">Active Courses</h3>
-                  <Link href="/dashboard" className="text-sm font-semibold text-[#2f5be7]">
-                    See all courses
-                  </Link>
-                </div>
-                <div className="mt-4 flex flex-col gap-4">
-                  <div className="flex flex-col gap-4 rounded-2xl border border-[#e8ebf3] bg-[#f8faff] p-4 md:flex-row md:items-center md:justify-between">
-                    <div className="flex items-center gap-4">
-                      <div className="size-16 rounded-2xl bg-[#2f5be7]/10 flex items-center justify-center text-[#2f5be7] font-bold">
-                        10
-                      </div>
-                      <div>
-                        <p className="text-xs font-bold text-[#2f5be7]">FOUNDATION</p>
-                        <p className="text-sm font-bold text-[#0e121b]">Leadership 101: Serving with Heart</p>
-                        <p className="text-xs text-[#5b6b83]">Last accessed: 2 days ago</p>
-                      </div>
-                    </div>
-                  <div className="flex items-center gap-4 flex-wrap md:flex-nowrap">
-                      <div className="w-full md:w-32">
-                        <div className="h-2 w-full rounded-full bg-[#e8ebf3]">
-                          <div className="h-2 w-[80%] rounded-full bg-[#2f5be7]"></div>
-                        </div>
-                        <p className="mt-2 text-xs text-[#2f5be7] font-semibold text-right">80%</p>
-                      </div>
-                      <button className="rounded-xl border border-[#e8ebf3] px-4 py-2 text-xs font-semibold text-[#1f2a44] hover:bg-white w-full md:w-auto">
-                        Resume Lesson
+                <div className="mt-6 flex flex-col gap-2">
+                  {profileTabs.map((tab) => {
+                    const isActive = tab === "General";
+                    return (
+                      <button
+                        className={`flex items-center justify-between rounded-xl px-3 py-2 text-sm font-semibold ${
+                          isActive
+                            ? "bg-[#eef3ff] text-[#2f5be7]"
+                            : "text-[#5b6b83] hover:bg-[#f7f9fc]"
+                        }`}
+                        key={tab}
+                        type="button"
+                      >
+                        <span>{tab}</span>
+                        {isActive ? (
+                          <span className="material-symbols-outlined text-base">chevron_right</span>
+                        ) : null}
                       </button>
+                    );
+                  })}
+                </div>
+                <button className="mt-6 w-full rounded-xl border border-[#e6ebf3] px-4 py-2 text-xs font-semibold text-[#e11d48]">
+                  Log Out
+                </button>
+              </aside>
+              <section className="rounded-3xl border border-[#e6ebf3] bg-white shadow-sm">
+                <div className="flex flex-col gap-6 border-b border-[#edf1fb] px-6 py-6 md:flex-row md:items-center md:justify-between md:px-8">
+                  <div className="flex items-center gap-4">
+                    <div className="size-16 rounded-full bg-[#e9eefc] text-[#2f5be7] flex items-center justify-center">
+                      <span className="material-symbols-outlined text-2xl">person</span>
+                    </div>
+                    <div>
+                      <h1 className="text-2xl font-bold text-[#0f172a]">Profile Settings</h1>
+                      <p className="text-sm text-[#6b7280]">
+                        Manage your spiritual and leadership identity
+                      </p>
+                      <div className="mt-2 flex flex-wrap gap-2">
+                        <span className="rounded-full bg-[#eef3ff] px-3 py-1 text-[10px] font-semibold text-[#2f5be7]">
+                          Verified Leader
+                        </span>
+                        <span className="rounded-full bg-[#f3f4f6] px-3 py-1 text-[10px] font-semibold text-[#64748b]">
+                          Global Community
+                        </span>
+                      </div>
                     </div>
                   </div>
-                  <div className="flex flex-col gap-4 rounded-2xl border border-[#e8ebf3] bg-[#f8faff] p-4 md:flex-row md:items-center md:justify-between">
-                    <div className="flex items-center gap-4">
-                      <div className="size-16 rounded-2xl bg-[#2f5be7]/10 flex items-center justify-center text-[#2f5be7] font-bold">
-                        08
+                  <button className="rounded-xl border border-[#e6ebf3] bg-[#f7f9ff] px-4 py-2 text-xs font-semibold text-[#2f5be7]">
+                    Upload New Photo
+                  </button>
+                </div>
+                <div className="px-6 py-6 md:px-8 space-y-8">
+                  <div className="space-y-4">
+                    <h2 className="text-sm font-bold text-[#0f172a]">Account Details</h2>
+                    <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                      <div className="space-y-2">
+                        <label className="text-[10px] font-semibold text-[#7b86b2] uppercase tracking-[0.2em]">
+                          Full Name
+                        </label>
+                        <input
+                          className="h-11 w-full rounded-xl border border-[#e6ebf3] bg-white px-4 text-sm text-[#111827] placeholder:text-[#9aa4b2] focus:border-[#2f5be7] focus:outline-none focus:ring-2 focus:ring-[#2f5be7]/20"
+                          defaultValue={userName}
+                          type="text"
+                        />
                       </div>
-                      <div>
-                        <p className="text-xs font-bold text-[#2f5be7]">DISCOVERY</p>
-                        <p className="text-sm font-bold text-[#0e121b]">The Art of Prophetic Ministry</p>
-                        <p className="text-xs text-[#5b6b83]">Last accessed: 1 week ago</p>
+                      <div className="space-y-2">
+                        <label className="text-[10px] font-semibold text-[#7b86b2] uppercase tracking-[0.2em]">
+                          Professional Email
+                        </label>
+                        <input
+                          className="h-11 w-full rounded-xl border border-[#e6ebf3] bg-white px-4 text-sm text-[#111827] placeholder:text-[#9aa4b2] focus:border-[#2f5be7] focus:outline-none focus:ring-2 focus:ring-[#2f5be7]/20"
+                          defaultValue="john.doe@ministry.org"
+                          type="email"
+                        />
                       </div>
                     </div>
-                  <div className="flex items-center gap-4 flex-wrap md:flex-nowrap">
-                      <div className="w-full md:w-32">
-                        <div className="h-2 w-full rounded-full bg-[#e8ebf3]">
-                          <div className="h-2 w-[45%] rounded-full bg-[#2f5be7]"></div>
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-semibold text-[#7b86b2] uppercase tracking-[0.2em]">
+                        Leadership Bio
+                      </label>
+                      <textarea
+                        className="min-h-[120px] w-full rounded-xl border border-[#e6ebf3] bg-white px-4 py-3 text-sm text-[#111827] placeholder:text-[#9aa4b2] focus:border-[#2f5be7] focus:outline-none focus:ring-2 focus:ring-[#2f5be7]/20"
+                        defaultValue="Servant leader focused on community growth and spiritual mentorship. Dedicated to the Mandate of the Kingdom since 2018."
+                      />
+                    </div>
+                  </div>
+                  <div className="space-y-4">
+                    <h2 className="text-sm font-bold text-[#0f172a]">Connected Accounts</h2>
+                    <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+                      {connectedAccounts.map((account) => (
+                        <div
+                          className="flex items-center justify-between rounded-2xl border border-[#edf1fb] bg-[#fafbff] px-4 py-4"
+                          key={account.name}
+                        >
+                          <div className="flex items-center gap-3">
+                            <div className="size-10 rounded-xl bg-white border border-[#e6ebf3] text-[#2f5be7] flex items-center justify-center">
+                              <span className="material-symbols-outlined text-base">
+                                {account.icon}
+                              </span>
+                            </div>
+                            <div>
+                              <p className="text-xs font-semibold text-[#0f172a]">
+                                {account.name}
+                              </p>
+                              <p className="text-[10px] text-[#7b86b2]">{account.status}</p>
+                            </div>
+                          </div>
+                          <button
+                            className={`relative h-6 w-11 rounded-full transition-colors ${
+                              account.active ? "bg-[#2f5be7]" : "bg-[#d7dce6]"
+                            }`}
+                            type="button"
+                          >
+                            <span
+                              className={`absolute top-0.5 size-5 rounded-full bg-white transition-transform ${
+                                account.active ? "translate-x-5" : "translate-x-1"
+                              }`}
+                            />
+                          </button>
                         </div>
-                        <p className="mt-2 text-xs text-[#2f5be7] font-semibold text-right">45%</p>
-                      </div>
-                      <button className="rounded-xl border border-[#e8ebf3] px-4 py-2 text-xs font-semibold text-[#1f2a44] hover:bg-white w-full md:w-auto">
-                        Resume Lesson
-                      </button>
+                      ))}
                     </div>
+                  </div>
+                  <div className="space-y-4">
+                    <h2 className="text-sm font-bold text-[#0f172a]">Notification Preferences</h2>
+                    <div className="space-y-3">
+                      {notificationPreferences.map((item) => (
+                        <div
+                          className="flex items-center justify-between rounded-2xl border border-[#edf1fb] bg-white px-4 py-4"
+                          key={item.title}
+                        >
+                          <div>
+                            <p className="text-xs font-semibold text-[#0f172a]">{item.title}</p>
+                            <p className="text-[10px] text-[#7b86b2]">{item.description}</p>
+                          </div>
+                          <button
+                            className={`relative h-6 w-11 rounded-full transition-colors ${
+                              item.active ? "bg-[#2f5be7]" : "bg-[#d7dce6]"
+                            }`}
+                            type="button"
+                          >
+                            <span
+                              className={`absolute top-0.5 size-5 rounded-full bg-white transition-transform ${
+                                item.active ? "translate-x-5" : "translate-x-1"
+                              }`}
+                            />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="flex flex-col gap-3 border-t border-[#edf1fb] pt-6 sm:flex-row sm:items-center sm:justify-end">
+                    <button className="rounded-xl border border-[#e6ebf3] px-4 py-2 text-xs font-semibold text-[#64748b]">
+                      Discard Changes
+                    </button>
+                    <button className="rounded-xl bg-[#2f5be7] px-5 py-2 text-xs font-semibold text-white shadow-[0_12px_20px_rgba(46,91,231,0.24)]">
+                      Save Changes
+                    </button>
                   </div>
                 </div>
               </section>
             </div>
-            <aside className="flex flex-col gap-6 order-last xl:order-none">
-              <div className="rounded-3xl border border-[#e8ebf3] bg-white p-6 text-center">
-                <p className="text-xs font-semibold tracking-[0.2em] text-[#8fa1b6]">
-                  Profile Maturity
-                </p>
-                <div className="mt-6 flex items-center justify-center">
-                  <div className="relative size-32 rounded-full border-[10px] border-[#e8ebf3]">
-                    <div className="absolute inset-2 rounded-full border-[10px] border-[#2f5be7] border-l-transparent border-b-transparent"></div>
-                    <div className="absolute inset-0 flex items-center justify-center flex-col">
-                      <p className="text-2xl font-black text-[#0e121b]">65%</p>
-                      <p className="text-xs text-[#5b6b83] uppercase font-semibold">Complete</p>
-                    </div>
-                  </div>
-                </div>
-                <p className="mt-4 text-sm font-semibold text-[#1f2a44]">
-                  Nearly a &#39;Shepherd&#39;
-                </p>
-                <p className="mt-2 text-xs text-[#5b6b83]">
-                  Complete your spiritual gift assessment to unlock the Shepherd badge.
-                </p>
-                <button className="mt-4 w-full rounded-xl bg-[#2f5be7] px-4 py-3 text-xs font-semibold text-white">
-                  Complete Now
-                </button>
-              </div>
-              <div className="rounded-3xl border border-[#e8ebf3] bg-white p-6">
-                <div className="flex items-center justify-between">
-                  <p className="text-xs font-semibold tracking-[0.2em] text-[#8fa1b6]">
-                    Upcoming Events
-                  </p>
-                  <button className="text-[#8fa1b6]">
-                    <span className="material-symbols-outlined text-base">more_horiz</span>
-                  </button>
-                </div>
-                <div className="mt-4 flex items-start gap-4 rounded-2xl border border-[#e8ebf3] bg-[#f8faff] p-4">
-                  <div className="flex flex-col items-center rounded-xl bg-[#2f5be7] px-3 py-2 text-white">
-                    <span className="text-xs font-semibold">24</span>
-                    <span className="text-[10px]">OCT</span>
-                  </div>
-                  <div>
-                    <p className="text-sm font-bold text-[#0e121b]">Prayer Vigil Night</p>
-                    <p className="text-xs text-[#5b6b83]">8:00 PM · Main Hall & Zoom</p>
-                  </div>
-                </div>
-              </div>
-            </aside>
           </div>
         </main>
       </div>

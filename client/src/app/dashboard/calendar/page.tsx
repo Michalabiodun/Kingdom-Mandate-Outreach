@@ -4,7 +4,13 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState, useSyncExternalStore } from "react";
 
-export default function Dashboard() {
+const days = Array.from({ length: 35 }, (_, index) =>
+  index + 1 <= 31 ? index + 1 : null,
+);
+
+const dotDays = new Set([2, 3, 8, 10, 15]);
+
+export default function CalendarPage() {
   const router = useRouter();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
@@ -157,7 +163,7 @@ export default function Dashboard() {
         <nav className="flex flex-col gap-1 px-4">
           <Link
             href="/dashboard"
-            className="flex items-center gap-3 rounded-xl bg-[#2f5be7] text-white px-4 py-3 text-sm font-semibold"
+            className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold text-[#5b6b83] hover:bg-[#f1f4ff]"
             onClick={() => setIsSidebarOpen(false)}
           >
             <span className="material-symbols-outlined text-lg">home</span>
@@ -173,7 +179,7 @@ export default function Dashboard() {
           </Link>
           <Link
             href="/dashboard/calendar"
-            className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold text-[#5b6b83] hover:bg-[#f1f4ff]"
+            className="flex items-center gap-3 rounded-xl bg-[#2f5be7] text-white px-4 py-3 text-sm font-semibold"
             onClick={() => setIsSidebarOpen(false)}
           >
             <span className="material-symbols-outlined text-lg">calendar_month</span>
@@ -243,7 +249,7 @@ export default function Dashboard() {
         <nav className="flex flex-col gap-1 px-4">
           <Link
             href="/dashboard"
-            className="flex items-center gap-3 rounded-xl bg-[#2f5be7] text-white px-4 py-3 text-sm font-semibold"
+            className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold text-[#5b6b83] hover:bg-[#f1f4ff]"
           >
             <span className="material-symbols-outlined text-lg">home</span>
             Home
@@ -257,7 +263,7 @@ export default function Dashboard() {
           </Link>
           <Link
             href="/dashboard/calendar"
-            className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold text-[#5b6b83] hover:bg-[#f1f4ff]"
+            className="flex items-center gap-3 rounded-xl bg-[#2f5be7] text-white px-4 py-3 text-sm font-semibold"
           >
             <span className="material-symbols-outlined text-lg">calendar_month</span>
             Calendar/Events
@@ -321,7 +327,7 @@ export default function Dashboard() {
               </span>
               <input
                 className="w-full bg-transparent text-sm text-[#1f2a44] outline-none"
-                placeholder="Search scriptures, courses, or events..."
+                placeholder="Search events..."
                 type="text"
               />
             </div>
@@ -347,166 +353,151 @@ export default function Dashboard() {
             </Link>
           </div>
         </header>
-        <main className="flex-1 px-4 py-5 md:px-6 md:py-6 lg:px-10 lg:py-8">
-          <div className="grid grid-cols-1 gap-6 xl:grid-cols-[1fr_300px]">
-            <div className="flex flex-col gap-6">
-              <section className="rounded-3xl border border-[#e8ebf3] bg-white p-6 lg:p-8 shadow-sm">
-                <div className="inline-flex items-center gap-2 rounded-full border border-[#d6e2ff] bg-[#eff4ff] px-3 py-1 text-xs font-semibold text-[#2f5be7]">
-                  <span className="size-2 rounded-full bg-[#2f5be7]"></span>
-                  Active Track
-                </div>
-                <div className="mt-4 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-                  <div>
-                    <h1 className="text-2xl md:text-4xl font-black text-[#0e121b]">
-                      Welcome back,
-                      <span className="block text-[#2f5be7]">Leader {userName}</span>
-                    </h1>
-                    <p className="mt-3 text-sm md:text-base text-[#5b6b83]">
-                      You are currently excelling in the <span className="font-semibold italic">Apostolic Foundation</span> leadership path. Continue your journey to achieve your goals.
-                    </p>
-                  </div>
-                  <div className="flex flex-col sm:flex-row flex-wrap gap-3">
-                    <button className="rounded-xl bg-[#2f5be7] px-5 py-3 text-sm font-semibold text-white shadow-md hover:brightness-110 w-full sm:w-auto">
-                      Resume Course
-                    </button>
-                    <button className="rounded-xl border border-[#e8ebf3] px-5 py-3 text-sm font-semibold text-[#1f2a44] hover:bg-[#f7f9fc] w-full sm:w-auto">
-                      View Full Path
-                    </button>
-                  </div>
-                </div>
-              </section>
-              <section className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
-                <div className="rounded-2xl border border-[#e8ebf3] bg-[#eef3ff] p-5">
-                  <div className="size-10 rounded-xl bg-[#2f5be7]/10 text-[#2f5be7] flex items-center justify-center">
-                    <span className="material-symbols-outlined">event_available</span>
-                  </div>
-                  <h3 className="mt-4 text-base font-bold text-[#0e121b]">Book a Session</h3>
-                  <p className="mt-2 text-sm text-[#5b6b83]">
-                    Schedule a 1-on-1 mentorship call with a ministry senior.
-                  </p>
-                </div>
-                <div className="rounded-2xl border border-[#e8ebf3] bg-[#eef3ff] p-5">
-                  <div className="size-10 rounded-xl bg-[#2f5be7]/10 text-[#2f5be7] flex items-center justify-center">
-                    <span className="material-symbols-outlined">volunteer_activism</span>
-                  </div>
-                  <h3 className="mt-4 text-base font-bold text-[#0e121b]">Request Prayer</h3>
-                  <p className="mt-2 text-sm text-[#5b6b83]">
-                    Submit your prayer requests to our dedicated intercession team.
-                  </p>
-                </div>
-                <div className="rounded-2xl border border-[#e8ebf3] bg-white p-5 flex items-center justify-between md:col-span-2 xl:col-span-1">
-                  <div>
-                    <p className="text-xs font-semibold tracking-[0.2em] text-[#8fa1b6]">
-                      Profile Maturity
-                    </p>
-                    <p className="mt-3 text-2xl font-black text-[#0e121b]">65%</p>
-                    <p className="text-xs text-[#5b6b83] uppercase font-semibold">Complete</p>
-                  </div>
-                  <div className="size-20 rounded-full border-[6px] border-[#e8ebf3] border-t-[#2f5be7] rotate-45"></div>
-                </div>
-              </section>
-              <section className="rounded-3xl border border-[#e8ebf3] bg-white p-6">
-                <div className="flex items-center justify-between">
-                  <h3 className="text-lg font-bold text-[#0e121b]">Active Courses</h3>
-                  <Link href="/dashboard" className="text-sm font-semibold text-[#2f5be7]">
-                    See all courses
-                  </Link>
-                </div>
-                <div className="mt-4 flex flex-col gap-4">
-                  <div className="flex flex-col gap-4 rounded-2xl border border-[#e8ebf3] bg-[#f8faff] p-4 md:flex-row md:items-center md:justify-between">
-                    <div className="flex items-center gap-4">
-                      <div className="size-16 rounded-2xl bg-[#2f5be7]/10 flex items-center justify-center text-[#2f5be7] font-bold">
-                        10
-                      </div>
-                      <div>
-                        <p className="text-xs font-bold text-[#2f5be7]">FOUNDATION</p>
-                        <p className="text-sm font-bold text-[#0e121b]">Leadership 101: Serving with Heart</p>
-                        <p className="text-xs text-[#5b6b83]">Last accessed: 2 days ago</p>
-                      </div>
-                    </div>
-                  <div className="flex items-center gap-4 flex-wrap md:flex-nowrap">
-                      <div className="w-full md:w-32">
-                        <div className="h-2 w-full rounded-full bg-[#e8ebf3]">
-                          <div className="h-2 w-[80%] rounded-full bg-[#2f5be7]"></div>
-                        </div>
-                        <p className="mt-2 text-xs text-[#2f5be7] font-semibold text-right">80%</p>
-                      </div>
-                      <button className="rounded-xl border border-[#e8ebf3] px-4 py-2 text-xs font-semibold text-[#1f2a44] hover:bg-white w-full md:w-auto">
-                        Resume Lesson
-                      </button>
-                    </div>
-                  </div>
-                  <div className="flex flex-col gap-4 rounded-2xl border border-[#e8ebf3] bg-[#f8faff] p-4 md:flex-row md:items-center md:justify-between">
-                    <div className="flex items-center gap-4">
-                      <div className="size-16 rounded-2xl bg-[#2f5be7]/10 flex items-center justify-center text-[#2f5be7] font-bold">
-                        08
-                      </div>
-                      <div>
-                        <p className="text-xs font-bold text-[#2f5be7]">DISCOVERY</p>
-                        <p className="text-sm font-bold text-[#0e121b]">The Art of Prophetic Ministry</p>
-                        <p className="text-xs text-[#5b6b83]">Last accessed: 1 week ago</p>
-                      </div>
-                    </div>
-                  <div className="flex items-center gap-4 flex-wrap md:flex-nowrap">
-                      <div className="w-full md:w-32">
-                        <div className="h-2 w-full rounded-full bg-[#e8ebf3]">
-                          <div className="h-2 w-[45%] rounded-full bg-[#2f5be7]"></div>
-                        </div>
-                        <p className="mt-2 text-xs text-[#2f5be7] font-semibold text-right">45%</p>
-                      </div>
-                      <button className="rounded-xl border border-[#e8ebf3] px-4 py-2 text-xs font-semibold text-[#1f2a44] hover:bg-white w-full md:w-auto">
-                        Resume Lesson
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </section>
+        <main className="flex-1 px-4 py-6 md:px-6 lg:px-10 lg:py-10">
+          <div className="mx-auto w-full max-w-6xl">
+            <div className="flex flex-col gap-1">
+              <h1 className="text-3xl md:text-4xl font-bold">Events Calendar</h1>
+              <p className="text-sm text-[#6b75a1]">October 2023</p>
             </div>
-            <aside className="flex flex-col gap-6 order-last xl:order-none">
-              <div className="rounded-3xl border border-[#e8ebf3] bg-white p-6 text-center">
-                <p className="text-xs font-semibold tracking-[0.2em] text-[#8fa1b6]">
-                  Profile Maturity
-                </p>
-                <div className="mt-6 flex items-center justify-center">
-                  <div className="relative size-32 rounded-full border-[10px] border-[#e8ebf3]">
-                    <div className="absolute inset-2 rounded-full border-[10px] border-[#2f5be7] border-l-transparent border-b-transparent"></div>
-                    <div className="absolute inset-0 flex items-center justify-center flex-col">
-                      <p className="text-2xl font-black text-[#0e121b]">65%</p>
-                      <p className="text-xs text-[#5b6b83] uppercase font-semibold">Complete</p>
+            <div className="mt-8 grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-8">
+              <section className="rounded-3xl border border-[#e6e9f5] bg-white p-6 shadow-sm">
+                <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+                  <div className="flex items-center gap-4">
+                    <button className="size-9 rounded-full border border-[#e6e9f5] text-[#7f8ac5] flex items-center justify-center">
+                      <span className="material-symbols-outlined text-base">chevron_left</span>
+                    </button>
+                    <p className="text-lg font-semibold">October 2023</p>
+                    <button className="size-9 rounded-full border border-[#e6e9f5] text-[#7f8ac5] flex items-center justify-center">
+                      <span className="material-symbols-outlined text-base">chevron_right</span>
+                    </button>
+                  </div>
+                  <div className="flex flex-wrap items-center gap-3">
+                    <button className="rounded-full border border-[#e6e9f5] bg-white px-4 py-2 text-xs font-semibold text-[#2f5be7] shadow-sm">
+                      Today
+                    </button>
+                    <div className="flex rounded-full border border-[#e6e9f5] bg-[#f7f8ff] p-1">
+                      <button className="rounded-full bg-white px-4 py-2 text-xs font-semibold text-[#2f5be7] shadow-sm">
+                        Month
+                      </button>
+                      <button className="rounded-full px-4 py-2 text-xs font-semibold text-[#8c96c7]">
+                        Week
+                      </button>
+                      <button className="rounded-full px-4 py-2 text-xs font-semibold text-[#8c96c7]">
+                        Day
+                      </button>
                     </div>
+                    <button className="rounded-full bg-[#2f5be7] px-4 py-2 text-xs font-semibold text-white shadow-sm">
+                      Add Event
+                    </button>
                   </div>
                 </div>
-                <p className="mt-4 text-sm font-semibold text-[#1f2a44]">
-                  Nearly a &#39;Shepherd&#39;
-                </p>
-                <p className="mt-2 text-xs text-[#5b6b83]">
-                  Complete your spiritual gift assessment to unlock the Shepherd badge.
-                </p>
-                <button className="mt-4 w-full rounded-xl bg-[#2f5be7] px-4 py-3 text-xs font-semibold text-white">
-                  Complete Now
-                </button>
-              </div>
-              <div className="rounded-3xl border border-[#e8ebf3] bg-white p-6">
+                <div className="mt-6 rounded-2xl border border-[#eef0f8] bg-[#fafbff] p-4">
+                  <div className="grid grid-cols-7 text-center text-[11px] font-semibold text-[#9aa3c8]">
+                    <span>Sun</span>
+                    <span>Mon</span>
+                    <span>Tue</span>
+                    <span>Wed</span>
+                    <span>Thu</span>
+                    <span>Fri</span>
+                    <span>Sat</span>
+                  </div>
+                  <div className="mt-4 grid grid-cols-7 gap-2 text-xs text-[#a2aacb]">
+                    {days.map((day, index) => (
+                      <div
+                        className={`min-h-[76px] rounded-xl border border-transparent p-2 text-left ${
+                          day === 5 ? "border-[#2f5be7] bg-white shadow-sm" : ""
+                        } ${day ? "bg-white/60" : "bg-transparent"}`}
+                        key={`${day ?? "empty"}-${index}`}
+                      >
+                        {day ? (
+                          <div className="flex flex-col gap-2">
+                            <div className="flex items-center justify-between">
+                              <span className="text-xs font-semibold text-[#6c739a]">
+                                {day}
+                              </span>
+                              {dotDays.has(day) && (
+                                <span className="size-1.5 rounded-full bg-[#2f5be7]" />
+                              )}
+                            </div>
+                            {day === 5 && (
+                              <span className="rounded-md bg-[#eef1ff] px-2 py-1 text-[10px] font-semibold text-[#2f5be7]">
+                                Youth Prayer
+                              </span>
+                            )}
+                            {day === 12 && (
+                              <span className="rounded-md bg-[#eef1ff] px-2 py-1 text-[10px] font-semibold text-[#2f5be7]">
+                                Bible Study
+                              </span>
+                            )}
+                          </div>
+                        ) : null}
+                      </div>
+                    ))}
+                  </div>
+                  <div className="mt-6 text-center text-xs text-[#a2aacb]">
+                    Viewing full month...
+                  </div>
+                </div>
+              </section>
+              <aside className="rounded-3xl border border-[#e6e9f5] bg-white p-6 shadow-sm">
                 <div className="flex items-center justify-between">
-                  <p className="text-xs font-semibold tracking-[0.2em] text-[#8fa1b6]">
-                    Upcoming Events
-                  </p>
-                  <button className="text-[#8fa1b6]">
-                    <span className="material-symbols-outlined text-base">more_horiz</span>
-                  </button>
-                </div>
-                <div className="mt-4 flex items-start gap-4 rounded-2xl border border-[#e8ebf3] bg-[#f8faff] p-4">
-                  <div className="flex flex-col items-center rounded-xl bg-[#2f5be7] px-3 py-2 text-white">
-                    <span className="text-xs font-semibold">24</span>
-                    <span className="text-[10px]">OCT</span>
-                  </div>
                   <div>
-                    <p className="text-sm font-bold text-[#0e121b]">Prayer Vigil Night</p>
-                    <p className="text-xs text-[#5b6b83]">8:00 PM · Main Hall & Zoom</p>
+                    <h2 className="text-lg font-bold">Upcoming Events</h2>
+                    <p className="text-xs text-[#8a92b6]">Don&#39;t miss out on what&#39;s next</p>
                   </div>
                 </div>
-              </div>
-            </aside>
+                <div className="mt-6 flex flex-col gap-4">
+                  <div className="rounded-2xl border border-[#eef0f8] bg-[#fafbff] p-4">
+                    <div className="flex items-center justify-between">
+                      <span className="rounded-full bg-[#e9ecff] px-3 py-1 text-[10px] font-semibold text-[#2f5be7]">
+                        TODAY
+                      </span>
+                      <span className="text-xs text-[#7b86b2]">7:00 PM</span>
+                    </div>
+                    <h3 className="mt-3 text-sm font-bold">Youth Prayer Night</h3>
+                    <p className="mt-2 text-xs text-[#7b86b2]">
+                      Join us for an evening of spiritual renewal and communal worship at the Main Hall.
+                    </p>
+                    <button className="mt-4 w-full rounded-xl bg-[#2f5be7] px-4 py-2 text-xs font-semibold text-white">
+                      RSVP Now
+                    </button>
+                  </div>
+                  <div className="rounded-2xl border border-[#eef0f8] bg-[#fafbff] p-4">
+                    <div className="flex items-center justify-between">
+                      <span className="rounded-full bg-[#e9ecff] px-3 py-1 text-[10px] font-semibold text-[#2f5be7]">
+                        OCT 12
+                      </span>
+                      <span className="text-xs text-[#7b86b2]">6:30 PM</span>
+                    </div>
+                    <h3 className="mt-3 text-sm font-bold">Leadership Seminar</h3>
+                    <p className="mt-2 text-xs text-[#7b86b2]">
+                      Developing the next generation of spiritual leaders. Workshop by Pastor John Doe.
+                    </p>
+                    <button className="mt-4 w-full rounded-xl bg-[#eef1ff] px-4 py-2 text-xs font-semibold text-[#2f5be7]">
+                      View Details
+                    </button>
+                  </div>
+                  <div className="rounded-2xl border border-[#eef0f8] bg-[#fafbff] p-4">
+                    <div className="flex items-center justify-between">
+                      <span className="rounded-full bg-[#e9ecff] px-3 py-1 text-[10px] font-semibold text-[#2f5be7]">
+                        OCT 15
+                      </span>
+                      <span className="text-xs text-[#7b86b2]">9:00 AM</span>
+                    </div>
+                    <h3 className="mt-3 text-sm font-bold">Community Outreach</h3>
+                    <p className="mt-2 text-xs text-[#7b86b2]">
+                      Distributing supplies to our neighborhood families in need.
+                    </p>
+                    <button className="mt-4 w-full rounded-xl bg-[#eef1ff] px-4 py-2 text-xs font-semibold text-[#2f5be7]">
+                      Sign Up
+                    </button>
+                  </div>
+                </div>
+                <button className="mt-6 w-full rounded-xl border border-[#eef0f8] px-4 py-3 text-xs font-semibold text-[#2f5be7]">
+                  See All Events →
+                </button>
+              </aside>
+            </div>
           </div>
         </main>
       </div>

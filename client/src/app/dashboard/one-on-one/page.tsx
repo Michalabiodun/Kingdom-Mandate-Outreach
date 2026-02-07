@@ -4,9 +4,53 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState, useSyncExternalStore } from "react";
 
-export default function Dashboard() {
+const calendarDays = [
+  null,
+  null,
+  null,
+  null,
+  1,
+  2,
+  3,
+  4,
+  5,
+  6,
+  7,
+  8,
+  9,
+  10,
+  11,
+  12,
+  13,
+  14,
+  15,
+  16,
+  17,
+  18,
+  19,
+  20,
+  21,
+  22,
+  23,
+  24,
+  25,
+  26,
+  27,
+  28,
+  29,
+  30,
+];
+
+const timeSlots = ["09:00 AM", "11:30 AM", "02:00 PM", "04:30 PM"];
+
+export default function OneOnOneBookingPage() {
   const router = useRouter();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [selectedDay, setSelectedDay] = useState<number | null>(4);
+  const [selectedTime, setSelectedTime] = useState("11:30 AM");
+  const availableDays = new Set(
+    calendarDays.filter((day): day is number => Boolean(day)),
+  );
 
   const subscribe = (callback: () => void) => {
     if (typeof window === "undefined") {
@@ -156,8 +200,8 @@ export default function Dashboard() {
         </div>
         <nav className="flex flex-col gap-1 px-4">
           <Link
-            href="/dashboard"
-            className="flex items-center gap-3 rounded-xl bg-[#2f5be7] text-white px-4 py-3 text-sm font-semibold"
+            href="/dashboard/calendar"
+            className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold text-[#5b6b83] hover:bg-[#f1f4ff]"
             onClick={() => setIsSidebarOpen(false)}
           >
             <span className="material-symbols-outlined text-lg">home</span>
@@ -172,7 +216,7 @@ export default function Dashboard() {
             Courses / Library
           </Link>
           <Link
-            href="/dashboard/calendar"
+            href="/dashboard"
             className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold text-[#5b6b83] hover:bg-[#f1f4ff]"
             onClick={() => setIsSidebarOpen(false)}
           >
@@ -189,7 +233,7 @@ export default function Dashboard() {
           </Link>
           <Link
             href="/dashboard/one-on-one"
-            className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold text-[#5b6b83] hover:bg-[#f1f4ff]"
+            className="flex items-center gap-3 rounded-xl bg-[#2f5be7] text-white px-4 py-3 text-sm font-semibold"
             onClick={() => setIsSidebarOpen(false)}
           >
             <span className="material-symbols-outlined text-lg">schedule</span>
@@ -242,8 +286,8 @@ export default function Dashboard() {
         </Link>
         <nav className="flex flex-col gap-1 px-4">
           <Link
-            href="/dashboard"
-            className="flex items-center gap-3 rounded-xl bg-[#2f5be7] text-white px-4 py-3 text-sm font-semibold"
+            href="/dashboard/calendar"
+            className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold text-[#5b6b83] hover:bg-[#f1f4ff]"
           >
             <span className="material-symbols-outlined text-lg">home</span>
             Home
@@ -256,7 +300,7 @@ export default function Dashboard() {
             Courses / Library
           </Link>
           <Link
-            href="/dashboard/calendar"
+            href="/dashboard"
             className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold text-[#5b6b83] hover:bg-[#f1f4ff]"
           >
             <span className="material-symbols-outlined text-lg">calendar_month</span>
@@ -271,7 +315,7 @@ export default function Dashboard() {
           </Link>
           <Link
             href="/dashboard/one-on-one"
-            className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold text-[#5b6b83] hover:bg-[#f1f4ff]"
+            className="flex items-center gap-3 rounded-xl bg-[#2f5be7] text-white px-4 py-3 text-sm font-semibold"
           >
             <span className="material-symbols-outlined text-lg">schedule</span>
             One-on-One Booking
@@ -321,7 +365,7 @@ export default function Dashboard() {
               </span>
               <input
                 className="w-full bg-transparent text-sm text-[#1f2a44] outline-none"
-                placeholder="Search scriptures, courses, or events..."
+                placeholder="Search mentors, topics, or sessions..."
                 type="text"
               />
             </div>
@@ -347,167 +391,177 @@ export default function Dashboard() {
             </Link>
           </div>
         </header>
-        <main className="flex-1 px-4 py-5 md:px-6 md:py-6 lg:px-10 lg:py-8">
-          <div className="grid grid-cols-1 gap-6 xl:grid-cols-[1fr_300px]">
-            <div className="flex flex-col gap-6">
-              <section className="rounded-3xl border border-[#e8ebf3] bg-white p-6 lg:p-8 shadow-sm">
-                <div className="inline-flex items-center gap-2 rounded-full border border-[#d6e2ff] bg-[#eff4ff] px-3 py-1 text-xs font-semibold text-[#2f5be7]">
-                  <span className="size-2 rounded-full bg-[#2f5be7]"></span>
-                  Active Track
-                </div>
-                <div className="mt-4 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-                  <div>
-                    <h1 className="text-2xl md:text-4xl font-black text-[#0e121b]">
-                      Welcome back,
-                      <span className="block text-[#2f5be7]">Leader {userName}</span>
-                    </h1>
-                    <p className="mt-3 text-sm md:text-base text-[#5b6b83]">
-                      You are currently excelling in the <span className="font-semibold italic">Apostolic Foundation</span> leadership path. Continue your journey to achieve your goals.
-                    </p>
-                  </div>
-                  <div className="flex flex-col sm:flex-row flex-wrap gap-3">
-                    <button className="rounded-xl bg-[#2f5be7] px-5 py-3 text-sm font-semibold text-white shadow-md hover:brightness-110 w-full sm:w-auto">
-                      Resume Course
-                    </button>
-                    <button className="rounded-xl border border-[#e8ebf3] px-5 py-3 text-sm font-semibold text-[#1f2a44] hover:bg-[#f7f9fc] w-full sm:w-auto">
-                      View Full Path
-                    </button>
-                  </div>
-                </div>
-              </section>
-              <section className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
-                <div className="rounded-2xl border border-[#e8ebf3] bg-[#eef3ff] p-5">
-                  <div className="size-10 rounded-xl bg-[#2f5be7]/10 text-[#2f5be7] flex items-center justify-center">
-                    <span className="material-symbols-outlined">event_available</span>
-                  </div>
-                  <h3 className="mt-4 text-base font-bold text-[#0e121b]">Book a Session</h3>
-                  <p className="mt-2 text-sm text-[#5b6b83]">
-                    Schedule a 1-on-1 mentorship call with a ministry senior.
-                  </p>
-                </div>
-                <div className="rounded-2xl border border-[#e8ebf3] bg-[#eef3ff] p-5">
-                  <div className="size-10 rounded-xl bg-[#2f5be7]/10 text-[#2f5be7] flex items-center justify-center">
-                    <span className="material-symbols-outlined">volunteer_activism</span>
-                  </div>
-                  <h3 className="mt-4 text-base font-bold text-[#0e121b]">Request Prayer</h3>
-                  <p className="mt-2 text-sm text-[#5b6b83]">
-                    Submit your prayer requests to our dedicated intercession team.
-                  </p>
-                </div>
-                <div className="rounded-2xl border border-[#e8ebf3] bg-white p-5 flex items-center justify-between md:col-span-2 xl:col-span-1">
-                  <div>
-                    <p className="text-xs font-semibold tracking-[0.2em] text-[#8fa1b6]">
-                      Profile Maturity
-                    </p>
-                    <p className="mt-3 text-2xl font-black text-[#0e121b]">65%</p>
-                    <p className="text-xs text-[#5b6b83] uppercase font-semibold">Complete</p>
-                  </div>
-                  <div className="size-20 rounded-full border-[6px] border-[#e8ebf3] border-t-[#2f5be7] rotate-45"></div>
-                </div>
-              </section>
-              <section className="rounded-3xl border border-[#e8ebf3] bg-white p-6">
-                <div className="flex items-center justify-between">
-                  <h3 className="text-lg font-bold text-[#0e121b]">Active Courses</h3>
-                  <Link href="/dashboard" className="text-sm font-semibold text-[#2f5be7]">
-                    See all courses
-                  </Link>
-                </div>
-                <div className="mt-4 flex flex-col gap-4">
-                  <div className="flex flex-col gap-4 rounded-2xl border border-[#e8ebf3] bg-[#f8faff] p-4 md:flex-row md:items-center md:justify-between">
-                    <div className="flex items-center gap-4">
-                      <div className="size-16 rounded-2xl bg-[#2f5be7]/10 flex items-center justify-center text-[#2f5be7] font-bold">
-                        10
-                      </div>
-                      <div>
-                        <p className="text-xs font-bold text-[#2f5be7]">FOUNDATION</p>
-                        <p className="text-sm font-bold text-[#0e121b]">Leadership 101: Serving with Heart</p>
-                        <p className="text-xs text-[#5b6b83]">Last accessed: 2 days ago</p>
-                      </div>
-                    </div>
-                  <div className="flex items-center gap-4 flex-wrap md:flex-nowrap">
-                      <div className="w-full md:w-32">
-                        <div className="h-2 w-full rounded-full bg-[#e8ebf3]">
-                          <div className="h-2 w-[80%] rounded-full bg-[#2f5be7]"></div>
-                        </div>
-                        <p className="mt-2 text-xs text-[#2f5be7] font-semibold text-right">80%</p>
-                      </div>
-                      <button className="rounded-xl border border-[#e8ebf3] px-4 py-2 text-xs font-semibold text-[#1f2a44] hover:bg-white w-full md:w-auto">
-                        Resume Lesson
-                      </button>
-                    </div>
-                  </div>
-                  <div className="flex flex-col gap-4 rounded-2xl border border-[#e8ebf3] bg-[#f8faff] p-4 md:flex-row md:items-center md:justify-between">
-                    <div className="flex items-center gap-4">
-                      <div className="size-16 rounded-2xl bg-[#2f5be7]/10 flex items-center justify-center text-[#2f5be7] font-bold">
-                        08
-                      </div>
-                      <div>
-                        <p className="text-xs font-bold text-[#2f5be7]">DISCOVERY</p>
-                        <p className="text-sm font-bold text-[#0e121b]">The Art of Prophetic Ministry</p>
-                        <p className="text-xs text-[#5b6b83]">Last accessed: 1 week ago</p>
-                      </div>
-                    </div>
-                  <div className="flex items-center gap-4 flex-wrap md:flex-nowrap">
-                      <div className="w-full md:w-32">
-                        <div className="h-2 w-full rounded-full bg-[#e8ebf3]">
-                          <div className="h-2 w-[45%] rounded-full bg-[#2f5be7]"></div>
-                        </div>
-                        <p className="mt-2 text-xs text-[#2f5be7] font-semibold text-right">45%</p>
-                      </div>
-                      <button className="rounded-xl border border-[#e8ebf3] px-4 py-2 text-xs font-semibold text-[#1f2a44] hover:bg-white w-full md:w-auto">
-                        Resume Lesson
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </section>
-            </div>
-            <aside className="flex flex-col gap-6 order-last xl:order-none">
-              <div className="rounded-3xl border border-[#e8ebf3] bg-white p-6 text-center">
-                <p className="text-xs font-semibold tracking-[0.2em] text-[#8fa1b6]">
-                  Profile Maturity
-                </p>
-                <div className="mt-6 flex items-center justify-center">
-                  <div className="relative size-32 rounded-full border-[10px] border-[#e8ebf3]">
-                    <div className="absolute inset-2 rounded-full border-[10px] border-[#2f5be7] border-l-transparent border-b-transparent"></div>
-                    <div className="absolute inset-0 flex items-center justify-center flex-col">
-                      <p className="text-2xl font-black text-[#0e121b]">65%</p>
-                      <p className="text-xs text-[#5b6b83] uppercase font-semibold">Complete</p>
-                    </div>
-                  </div>
-                </div>
-                <p className="mt-4 text-sm font-semibold text-[#1f2a44]">
-                  Nearly a &#39;Shepherd&#39;
-                </p>
-                <p className="mt-2 text-xs text-[#5b6b83]">
-                  Complete your spiritual gift assessment to unlock the Shepherd badge.
-                </p>
-                <button className="mt-4 w-full rounded-xl bg-[#2f5be7] px-4 py-3 text-xs font-semibold text-white">
-                  Complete Now
-                </button>
-              </div>
-              <div className="rounded-3xl border border-[#e8ebf3] bg-white p-6">
-                <div className="flex items-center justify-between">
-                  <p className="text-xs font-semibold tracking-[0.2em] text-[#8fa1b6]">
-                    Upcoming Events
-                  </p>
-                  <button className="text-[#8fa1b6]">
-                    <span className="material-symbols-outlined text-base">more_horiz</span>
+        <main className="flex-1 px-4 py-6 md:px-6 lg:px-10 lg:py-10">
+          <section className="mx-auto w-full max-w-5xl">
+            <div className="rounded-[32px] border border-[#e6ebf2] bg-white shadow-[0_30px_80px_rgba(15,23,42,0.12)] overflow-hidden">
+              <div className="flex flex-col gap-2 border-b border-[#e9eef7] bg-[#f8faff] px-6 py-6 md:px-10">
+                <div className="flex items-center justify-between gap-4">
+                  <h1 className="text-2xl md:text-3xl font-bold text-[#111827]">
+                    Book a One-on-One Session
+                  </h1>
+                  <button className="size-8 rounded-full border border-[#e0e6f2] text-[#9aa4b2] flex items-center justify-center">
+                    <span className="material-symbols-outlined text-base">close</span>
                   </button>
                 </div>
-                <div className="mt-4 flex items-start gap-4 rounded-2xl border border-[#e8ebf3] bg-[#f8faff] p-4">
-                  <div className="flex flex-col items-center rounded-xl bg-[#2f5be7] px-3 py-2 text-white">
-                    <span className="text-xs font-semibold">24</span>
-                    <span className="text-[10px]">OCT</span>
+                <p className="text-sm text-[#6b7280]">
+                  Connect with our spiritual leaders for personalized growth and divine guidance.
+                </p>
+              </div>
+              <div className="grid grid-cols-1 lg:grid-cols-[1.2fr_1fr]">
+                <div className="px-6 py-6 md:px-10 md:py-8 space-y-5">
+                  <div className="space-y-2">
+                    <label className="text-xs font-semibold tracking-[0.2em] text-[#64748b] uppercase">
+                      Full name
+                    </label>
+                    <input
+                      className="h-12 w-full rounded-xl border border-[#e5e7f2] bg-white px-4 text-sm text-[#111827] placeholder:text-[#9aa4b2] focus:border-[#2f5be7] focus:outline-none focus:ring-2 focus:ring-[#2f5be7]/20"
+                      placeholder="John Doe"
+                      type="text"
+                    />
                   </div>
-                  <div>
-                    <p className="text-sm font-bold text-[#0e121b]">Prayer Vigil Night</p>
-                    <p className="text-xs text-[#5b6b83]">8:00 PM · Main Hall & Zoom</p>
+                  <div className="grid gap-4 md:grid-cols-2">
+                    <div className="space-y-2">
+                      <label className="text-xs font-semibold tracking-[0.2em] text-[#64748b] uppercase">
+                        Email address
+                      </label>
+                      <input
+                        className="h-12 w-full rounded-xl border border-[#e5e7f2] bg-white px-4 text-sm text-[#111827] placeholder:text-[#9aa4b2] focus:border-[#2f5be7] focus:outline-none focus:ring-2 focus:ring-[#2f5be7]/20"
+                        placeholder="john@example.com"
+                        type="email"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-xs font-semibold tracking-[0.2em] text-[#64748b] uppercase">
+                        Phone number
+                      </label>
+                      <input
+                        className="h-12 w-full rounded-xl border border-[#e5e7f2] bg-white px-4 text-sm text-[#111827] placeholder:text-[#9aa4b2] focus:border-[#2f5be7] focus:outline-none focus:ring-2 focus:ring-[#2f5be7]/20"
+                        placeholder="+1 (555) 000-0000"
+                        type="tel"
+                      />
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-xs font-semibold tracking-[0.2em] text-[#64748b] uppercase">
+                      Topic of discussion
+                    </label>
+                    <div className="relative">
+                      <select className="h-12 w-full appearance-none rounded-xl border border-[#e5e7f2] bg-white px-4 pr-10 text-sm text-[#111827] focus:border-[#2f5be7] focus:outline-none focus:ring-2 focus:ring-[#2f5be7]/20">
+                        <option>Spiritual Growth & Disciplines</option>
+                        <option>Leadership & Ministry Strategy</option>
+                        <option>Prayer & Intercession</option>
+                        <option>Marketplace Influence</option>
+                      </select>
+                      <span className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-[#94a3b8] material-symbols-outlined text-base">
+                        expand_more
+                      </span>
+                    </div>
+                  </div>
+                  <div className="rounded-2xl border border-[#e6ecf7] bg-[#f1f5ff] p-4">
+                    <div className="flex items-start gap-3">
+                      <div className="size-9 rounded-full bg-[#2f5be7]/10 text-[#2f5be7] flex items-center justify-center">
+                        <span className="material-symbols-outlined text-base">info</span>
+                      </div>
+                      <div>
+                        <p className="text-sm font-semibold text-[#1f2a44]">
+                          Sessions are conducted via video call or in-person at our hub.
+                        </p>
+                        <p className="mt-1 text-xs text-[#6b7280]">
+                          You will receive a confirmation link after booking.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div className="border-t border-[#e9eef7] lg:border-t-0 lg:border-l px-6 py-6 md:px-8 md:py-8 space-y-5">
+                  <div className="flex items-center justify-between">
+                    <p className="text-xs font-semibold tracking-[0.2em] text-[#64748b] uppercase">
+                      Select date & time
+                    </p>
+                    <div className="flex items-center gap-2">
+                      <button className="size-8 rounded-full border border-[#e5e7f2] text-[#94a3b8] flex items-center justify-center">
+                        <span className="material-symbols-outlined text-base">chevron_left</span>
+                      </button>
+                      <button className="size-8 rounded-full border border-[#e5e7f2] text-[#94a3b8] flex items-center justify-center">
+                        <span className="material-symbols-outlined text-base">chevron_right</span>
+                      </button>
+                    </div>
+                  </div>
+                  <div className="rounded-2xl border border-[#e5e7f2] bg-white p-4">
+                    <div className="text-center text-sm font-semibold text-[#111827]">
+                      October 2024
+                    </div>
+                    <div className="mt-4 grid grid-cols-7 gap-2 text-[11px] font-semibold text-[#9aa4b2]">
+                      {["S", "M", "T", "W", "T", "F", "S"].map((label) => (
+                        <div className="text-center" key={label}>
+                          {label}
+                        </div>
+                      ))}
+                    </div>
+                    <div className="mt-2 grid grid-cols-7 gap-2 text-xs">
+                      {calendarDays.map((day, index) => {
+                        const isSelected = day === selectedDay;
+                        const isDisabled = !day || !availableDays.has(day);
+                        return (
+                          <button
+                            className={`h-8 rounded-lg text-xs font-semibold ${
+                              isSelected
+                                ? "bg-[#2f5be7] text-white"
+                                : isDisabled
+                                  ? "text-[#cbd5e1]"
+                                  : "text-[#64748b] hover:bg-[#eef3ff]"
+                            }`}
+                            disabled={isDisabled}
+                            key={`${day ?? "empty"}-${index}`}
+                            type="button"
+                            onClick={() => setSelectedDay(day)}
+                          >
+                            {day ?? ""}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    {timeSlots.map((slot) => {
+                      const isSelected = slot === selectedTime;
+                      return (
+                        <button
+                          className={`h-11 rounded-xl border text-sm font-semibold ${
+                            isSelected
+                              ? "border-[#2f5be7] bg-[#eaf1ff] text-[#2f5be7]"
+                              : "border-[#e5e7f2] text-[#1f2a44] hover:bg-[#f7f9fc]"
+                          }`}
+                          key={slot}
+                          type="button"
+                          onClick={() => setSelectedTime(slot)}
+                        >
+                          {slot}
+                        </button>
+                      );
+                    })}
+                  </div>
+                  <button
+                    className="w-full rounded-2xl bg-[#2f5be7] px-6 py-4 text-sm font-semibold text-white shadow-[0_14px_24px_rgba(46,91,231,0.24)] hover:brightness-110 flex items-center justify-center gap-2"
+                    type="button"
+                  >
+                    Confirm Booking
+                    <span className="material-symbols-outlined text-lg">arrow_forward</span>
+                  </button>
+                  <div className="flex items-center justify-center gap-2 text-xs text-[#9aa4b2]">
+                    <span className="size-1.5 rounded-full bg-[#2f5be7]" />
+                    Available for immediate scheduling
                   </div>
                 </div>
               </div>
-            </aside>
-          </div>
+            </div>
+            <div className="mt-6 text-center text-xs text-[#8b95a7]">
+              Need help?{" "}
+              <Link className="font-semibold text-[#2f5be7]" href="/contact">
+                Contact Support
+              </Link>
+            </div>
+          </section>
         </main>
       </div>
     </div>

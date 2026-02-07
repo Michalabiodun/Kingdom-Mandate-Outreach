@@ -1,7 +1,5 @@
 import Image from "next/image";
 import Link from "next/link";
-import LandingFooter from "@/components/landing/LandingFooter";
-import LandingHeader from "@/components/landing/LandingHeader";
 
 const team = [
   {
@@ -50,18 +48,16 @@ const team = [
 
 export default function About() {
   return (
-    <div className="flex flex-col min-h-screen">
-      <LandingHeader />
-      <main className="flex-1">
+    <div className="flex flex-col flex-1">
       <section className="w-full max-w-[1280px] mx-auto px-6 md:px-10 py-10 md:py-16">
         <div className="glass-panel rounded-3xl p-6 md:p-10 lg:p-14 text-center shadow-2xl">
-          <span className="text-[var(--accent-primary)] font-bold tracking-widest uppercase text-xs md:text-sm">
+          <span className="text-(--accent-primary) font-bold tracking-widest uppercase text-xs md:text-sm">
             Our Purpose
           </span>
-          <h1 className="mt-3 md:mt-4 text-3xl md:text-4xl lg:text-5xl font-black tracking-tight text-[var(--text-main)]">
+          <h1 className="mt-3 md:mt-4 text-3xl md:text-4xl lg:text-5xl font-black tracking-tight text-(--text-main)">
             Our Mission
           </h1>
-          <p className="mt-4 md:mt-6 text-[var(--text-muted)] text-base md:text-lg max-w-3xl mx-auto leading-relaxed">
+          <p className="mt-4 md:mt-6 text-(--text-muted) text-base md:text-lg max-w-3xl mx-auto leading-relaxed">
             Kingdom Mandate is dedicated to fostering spiritual maturity and leadership excellence through a biblical foundation and modern ministry approach. We exist to empower individuals to fulfill their divine calling and equip the next generation of spiritual leaders for global impact.
           </p>
         </div>
@@ -69,16 +65,16 @@ export default function About() {
 
       <section className="w-full max-w-[1280px] mx-auto px-6 md:px-10 py-8 md:py-12">
         <div className="flex flex-col items-center gap-2 mb-8">
-          <h2 className="text-2xl md:text-3xl font-bold text-[var(--text-main)]">
+          <h2 className="text-2xl md:text-3xl font-bold text-(--text-main)">
             Leadership Ministry Team
           </h2>
-          <div className="h-1 w-20 bg-[var(--accent-primary)] rounded-full"></div>
+          <div className="h-1 w-20 bg-(--accent-primary) rounded-full"></div>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
           {team.map((member) => (
             <div key={member.name} className="glass-panel rounded-2xl p-6 flex flex-col gap-4 transition-transform hover:-translate-y-1">
               <div className="flex items-center gap-4">
-                <div className="size-16 md:size-20 rounded-full border-2 border-[var(--accent-primary)] overflow-hidden">
+                <div className="size-16 md:size-20 rounded-full border-2 border-(--accent-primary) overflow-hidden">
                   <Image
                     alt={member.name}
                     className="h-full w-full object-cover"
@@ -89,22 +85,22 @@ export default function About() {
                   />
                 </div>
                 <div className="flex flex-col">
-                  <h3 className="text-[var(--accent-primary)] font-extrabold text-base md:text-lg">
+                  <h3 className="text-(--accent-primary) font-extrabold text-base md:text-lg">
                     {member.name}
                   </h3>
-                  <p className="text-[var(--text-muted)] text-xs md:text-sm font-semibold">
+                  <p className="text-(--text-muted) text-xs md:text-sm font-semibold">
                     {member.role}
                   </p>
                 </div>
               </div>
-              <p className="text-[var(--text-muted)] text-sm leading-relaxed">
+              <p className="text-(--text-muted) text-sm leading-relaxed">
                 {member.bio}
               </p>
               <div className="flex items-center justify-between pt-2">
-                <Link href="/dashboard" className="text-[var(--accent-primary)] font-bold text-sm hover:underline">
+                <Link href="/dashboard" className="text-(--accent-primary) font-bold text-sm hover:underline">
                   Read More
                 </Link>
-                <div className="flex items-center gap-3 text-[var(--text-muted)]">
+                <div className="flex items-center gap-3 text-(--text-muted)">
                   <span className="material-symbols-outlined text-base">share</span>
                   <span className="material-symbols-outlined text-base">visibility</span>
                 </div>
@@ -116,30 +112,28 @@ export default function About() {
 
       <section className="w-full max-w-[1280px] mx-auto px-6 md:px-10 py-10 md:py-16">
         <div className="glass-panel rounded-2xl p-8 md:p-12 text-center border border-white/50">
-          <h3 className="text-xl md:text-2xl font-black text-[var(--text-main)]">
+          <h3 className="text-xl md:text-2xl font-black text-(--text-main)">
             Want to join our mission?
           </h3>
-          <p className="mt-2 md:mt-3 text-[var(--text-muted)] max-w-2xl mx-auto">
+          <p className="mt-2 md:mt-3 text-(--text-muted) max-w-2xl mx-auto">
             We are always looking for dedicated individuals to serve in our various ministry teams.
           </p>
           <div className="mt-6 md:mt-8 flex flex-wrap justify-center gap-4">
             <Link
               href="/dashboard"
-              className="flex min-w-[160px] md:min-w-[200px] cursor-pointer items-center justify-center overflow-hidden rounded-xl h-12 md:h-14 px-6 bg-[var(--accent-primary)] text-white text-sm md:text-lg font-bold hover:brightness-110 transition-all shadow-md"
+              className="flex min-w-[160px] md:min-w-[200px] cursor-pointer items-center justify-center overflow-hidden rounded-xl h-12 md:h-14 px-6 bg-(--accent-primary) text-white text-sm md:text-lg font-bold hover:brightness-110 transition-all shadow-md"
             >
               Get Involved
             </Link>
             <Link
               href="/contact"
-              className="flex min-w-[160px] md:min-w-[200px] cursor-pointer items-center justify-center overflow-hidden rounded-xl h-12 md:h-14 px-6 bg-white text-[var(--accent-primary)] border-2 border-[var(--accent-primary)] text-sm md:text-lg font-bold hover:bg-white/60 transition-all"
+              className="flex min-w-[160px] md:min-w-[200px] cursor-pointer items-center justify-center overflow-hidden rounded-xl h-12 md:h-14 px-6 bg-white text-(--accent-primary) border-2 border-(--accent-primary) text-sm md:text-lg font-bold hover:bg-white/60 transition-all"
             >
               Contact Us
             </Link>
           </div>
         </div>
       </section>
-      </main>
-      <LandingFooter />
     </div>
   );
 }

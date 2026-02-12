@@ -162,7 +162,7 @@ export default function CalendarPage() {
         </div>
         <nav className="flex flex-col gap-1 px-4">
           <Link
-            href="/dashboard"
+            href="/dashboard/prayer-requests"
             className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold text-[#5b6b83] hover:bg-[#f1f4ff]"
             onClick={() => setIsSidebarOpen(false)}
           >
@@ -186,7 +186,7 @@ export default function CalendarPage() {
             Calendar/Events
           </Link>
           <Link
-            href="/dashboard"
+            href="/dashboard/prayer-requests"
             className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold text-[#5b6b83] hover:bg-[#f1f4ff]"
             onClick={() => setIsSidebarOpen(false)}
           >
@@ -221,15 +221,25 @@ export default function CalendarPage() {
         <div className="mt-auto px-4 pb-6">
           <div className="border-t border-[#e8ebf3] pt-5">
             <Link
-              href="/dashboard"
+              href="/dashboard/profile"
               className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold text-[#5b6b83] hover:bg-[#f1f4ff]"
               onClick={() => setIsSidebarOpen(false)}
             >
               <span className="material-symbols-outlined text-lg">settings</span>
               Settings
             </Link>
-            <button className="mt-4 w-full rounded-xl border border-[#e8ebf3] px-4 py-3 text-sm font-semibold text-[#1f2a44] hover:bg-[#f7f9fc]">
-              View Profile
+            <button
+              className="mt-4 w-full rounded-xl border border-[#e8ebf3] px-4 py-3 text-sm font-semibold text-[#1f2a44] hover:bg-[#f7f9fc]"
+              onClick={() => {
+                setIsSidebarOpen(false);
+                sessionStorage.removeItem("km-auth");
+                sessionStorage.removeItem("km-onboarding");
+                sessionStorage.removeItem("km-preferences");
+                window.dispatchEvent(new Event("km-session"));
+                router.push("/login");
+              }}
+            >
+              Log Out
             </button>
           </div>
         </div>
@@ -269,7 +279,7 @@ export default function CalendarPage() {
             Calendar/Events
           </Link>
           <Link
-            href="/dashboard"
+            href="/dashboard/prayer-requests"
             className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold text-[#5b6b83] hover:bg-[#f1f4ff]"
           >
             <span className="material-symbols-outlined text-lg">volunteer_activism</span>
@@ -300,14 +310,23 @@ export default function CalendarPage() {
         <div className="mt-auto px-4 pb-6">
           <div className="border-t border-[#e8ebf3] pt-5">
             <Link
-              href="/dashboard"
+              href="/dashboard/profile"
               className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold text-[#5b6b83] hover:bg-[#f1f4ff]"
             >
               <span className="material-symbols-outlined text-lg">settings</span>
               Settings
             </Link>
-            <button className="mt-4 w-full rounded-xl border border-[#e8ebf3] px-4 py-3 text-sm font-semibold text-[#1f2a44] hover:bg-[#f7f9fc]">
-              View Profile
+            <button
+              className="mt-4 w-full rounded-xl border border-[#e8ebf3] px-4 py-3 text-sm font-semibold text-[#1f2a44] hover:bg-[#f7f9fc]"
+              onClick={() => {
+                sessionStorage.removeItem("km-auth");
+                sessionStorage.removeItem("km-onboarding");
+                sessionStorage.removeItem("km-preferences");
+                window.dispatchEvent(new Event("km-session"));
+                router.push("/login");
+              }}
+            >
+              Log Out
             </button>
           </div>
         </div>
@@ -321,7 +340,7 @@ export default function CalendarPage() {
             >
               <span className="material-symbols-outlined">menu</span>
             </button>
-            <div className="flex items-center gap-3 w-full rounded-full border border-[#e8ebf3] bg-[#f7f9fc] px-4 py-2">
+            <div className="flex items-center gap-3 w-full rounded-full border border-[#e8ebf3] bg-[#f7f9fc] px-4 py-2 focus-within:border-[#2f5be7] focus-within:ring-2 focus-within:ring-[#2f5be7]/20">
               <span className="material-symbols-outlined text-[#8fa1b6] text-base">
                 search
               </span>
@@ -360,7 +379,7 @@ export default function CalendarPage() {
               <p className="text-sm text-[#6b75a1]">October 2023</p>
             </div>
             <div className="mt-8 grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-8">
-              <section className="rounded-3xl border border-[#e6e9f5] bg-white p-6 shadow-sm">
+              <section className="rounded-3xl border border-[#e6e9f5] bg-white p-6 shadow-sm transition-transform duration-200 hover:-translate-y-1">
                 <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
                   <div className="flex items-center gap-4">
                     <button className="size-9 rounded-full border border-[#e6e9f5] text-[#7f8ac5] flex items-center justify-center">
@@ -391,7 +410,7 @@ export default function CalendarPage() {
                     </button>
                   </div>
                 </div>
-                <div className="mt-6 rounded-2xl border border-[#eef0f8] bg-[#fafbff] p-4">
+                <div className="mt-6 rounded-2xl border border-[#eef0f8] bg-[#fafbff] p-4 transition-transform duration-200 hover:-translate-y-1">
                   <div className="grid grid-cols-7 text-center text-[11px] font-semibold text-[#9aa3c8]">
                     <span>Sun</span>
                     <span>Mon</span>
@@ -439,7 +458,7 @@ export default function CalendarPage() {
                   </div>
                 </div>
               </section>
-              <aside className="rounded-3xl border border-[#e6e9f5] bg-white p-6 shadow-sm">
+              <aside className="rounded-3xl border border-[#e6e9f5] bg-white p-6 shadow-sm transition-transform duration-200 hover:-translate-y-1">
                 <div className="flex items-center justify-between">
                   <div>
                     <h2 className="text-lg font-bold">Upcoming Events</h2>
@@ -447,7 +466,7 @@ export default function CalendarPage() {
                   </div>
                 </div>
                 <div className="mt-6 flex flex-col gap-4">
-                  <div className="rounded-2xl border border-[#eef0f8] bg-[#fafbff] p-4">
+                  <div className="rounded-2xl border border-[#eef0f8] bg-[#fafbff] p-4 transition-transform duration-200 hover:-translate-y-1">
                     <div className="flex items-center justify-between">
                       <span className="rounded-full bg-[#e9ecff] px-3 py-1 text-[10px] font-semibold text-[#2f5be7]">
                         TODAY
@@ -462,7 +481,7 @@ export default function CalendarPage() {
                       RSVP Now
                     </button>
                   </div>
-                  <div className="rounded-2xl border border-[#eef0f8] bg-[#fafbff] p-4">
+                  <div className="rounded-2xl border border-[#eef0f8] bg-[#fafbff] p-4 transition-transform duration-200 hover:-translate-y-1">
                     <div className="flex items-center justify-between">
                       <span className="rounded-full bg-[#e9ecff] px-3 py-1 text-[10px] font-semibold text-[#2f5be7]">
                         OCT 12
@@ -477,7 +496,7 @@ export default function CalendarPage() {
                       View Details
                     </button>
                   </div>
-                  <div className="rounded-2xl border border-[#eef0f8] bg-[#fafbff] p-4">
+                  <div className="rounded-2xl border border-[#eef0f8] bg-[#fafbff] p-4 transition-transform duration-200 hover:-translate-y-1">
                     <div className="flex items-center justify-between">
                       <span className="rounded-full bg-[#e9ecff] px-3 py-1 text-[10px] font-semibold text-[#2f5be7]">
                         OCT 15

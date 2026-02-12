@@ -225,7 +225,7 @@
          </div>
          <nav className="flex flex-col gap-1 px-4">
           <Link
-            href="/dashboard/calendar"
+            href="/dashboard"
              className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold text-[#5b6b83] hover:bg-[#f1f4ff]"
              onClick={() => setIsSidebarOpen(false)}
            >
@@ -249,7 +249,7 @@
              Calendar/Events
            </Link>
            <Link
-             href="/dashboard"
+             href="/dashboard/prayer-requests"
              className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold text-[#5b6b83] hover:bg-[#f1f4ff]"
              onClick={() => setIsSidebarOpen(false)}
            >
@@ -284,15 +284,25 @@
          <div className="mt-auto px-4 pb-6">
            <div className="border-t border-[#e8ebf3] pt-5">
              <Link
-               href="/dashboard"
+               href="/dashboard/profile"
                className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold text-[#5b6b83] hover:bg-[#f1f4ff]"
                onClick={() => setIsSidebarOpen(false)}
              >
                <span className="material-symbols-outlined text-lg">settings</span>
                Settings
              </Link>
-             <button className="mt-4 w-full rounded-xl border border-[#e8ebf3] px-4 py-3 text-sm font-semibold text-[#1f2a44] hover:bg-[#f7f9fc]">
-               View Profile
+             <button
+               className="mt-4 w-full rounded-xl border border-[#e8ebf3] px-4 py-3 text-sm font-semibold text-[#1f2a44] hover:bg-[#f7f9fc]"
+               onClick={() => {
+                 setIsSidebarOpen(false);
+                 sessionStorage.removeItem("km-auth");
+                 sessionStorage.removeItem("km-onboarding");
+                 sessionStorage.removeItem("km-preferences");
+                 window.dispatchEvent(new Event("km-session"));
+                 router.push("/login");
+               }}
+             >
+               Log Out
              </button>
            </div>
          </div>
@@ -309,9 +319,9 @@
              </p>
            </div>
          </Link>
-         <nav className="flex flex-col gap-1 px-4">
+        <nav className="flex flex-col gap-1 px-4">
           <Link
-            href="/dashboard/calendar"
+            href="/dashboard"
              className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold text-[#5b6b83] hover:bg-[#f1f4ff]"
            >
              <span className="material-symbols-outlined text-lg">home</span>
@@ -332,7 +342,7 @@
              Calendar/Events
            </Link>
            <Link
-             href="/dashboard"
+             href="/dashboard/prayer-requests"
              className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold text-[#5b6b83] hover:bg-[#f1f4ff]"
            >
              <span className="material-symbols-outlined text-lg">volunteer_activism</span>
@@ -363,14 +373,23 @@
          <div className="mt-auto px-4 pb-6">
            <div className="border-t border-[#e8ebf3] pt-5">
              <Link
-               href="/dashboard"
+               href="/dashboard/profile"
                className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold text-[#5b6b83] hover:bg-[#f1f4ff]"
              >
                <span className="material-symbols-outlined text-lg">settings</span>
                Settings
              </Link>
-             <button className="mt-4 w-full rounded-xl border border-[#e8ebf3] px-4 py-3 text-sm font-semibold text-[#1f2a44] hover:bg-[#f7f9fc]">
-               View Profile
+             <button
+               className="mt-4 w-full rounded-xl border border-[#e8ebf3] px-4 py-3 text-sm font-semibold text-[#1f2a44] hover:bg-[#f7f9fc]"
+               onClick={() => {
+                 sessionStorage.removeItem("km-auth");
+                 sessionStorage.removeItem("km-onboarding");
+                 sessionStorage.removeItem("km-preferences");
+                 window.dispatchEvent(new Event("km-session"));
+                 router.push("/login");
+               }}
+             >
+               Log Out
              </button>
            </div>
          </div>
@@ -384,7 +403,7 @@
              >
                <span className="material-symbols-outlined">menu</span>
              </button>
-             <div className="flex items-center gap-3 w-full rounded-full border border-[#e8ebf3] bg-[#f7f9fc] px-4 py-2">
+            <div className="flex items-center gap-3 w-full rounded-full border border-[#e8ebf3] bg-[#f7f9fc] px-4 py-2 focus-within:border-[#2f5be7] focus-within:ring-2 focus-within:ring-[#2f5be7]/20">
                <span className="material-symbols-outlined text-[#8fa1b6] text-base">
                  search
                </span>
@@ -430,7 +449,7 @@
                  <span>/</span>
                  <span className="text-[#2f5be7]">Principles of Kingdom Leadership</span>
                </div>
-               <section className="rounded-3xl border border-[#e8ebf3] bg-white p-4 md:p-6 shadow-sm">
+              <section className="rounded-3xl border border-[#e8ebf3] bg-white p-4 md:p-6 shadow-sm transition-transform duration-200 hover:-translate-y-1">
                  <div className="relative w-full overflow-hidden rounded-2xl border border-[#e6ebf3] bg-[#0f172a] aspect-video">
                    <div
                      className="absolute inset-0 bg-cover bg-center"
@@ -504,10 +523,10 @@
                  </div>
                  <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
                    {relatedSermons.map((sermon) => (
-                     <div
-                       className="rounded-2xl border border-[#e8ebf3] bg-[#f8faff] overflow-hidden"
-                       key={sermon.title}
-                     >
+                    <div
+                      className="rounded-2xl border border-[#e8ebf3] bg-[#f8faff] overflow-hidden transition-transform duration-200 hover:-translate-y-1"
+                      key={sermon.title}
+                    >
                        <div className="relative h-32">
                          <div
                            className="absolute inset-0 bg-cover bg-center"
@@ -533,14 +552,14 @@
                  </div>
                </section>
              </div>
-             <aside className="rounded-3xl border border-[#e8ebf3] bg-white p-5 md:p-6 h-fit">
+            <aside className="rounded-3xl border border-[#e8ebf3] bg-white p-5 md:p-6 h-fit transition-transform duration-200 hover:-translate-y-1">
                <div className="flex items-center justify-between">
                  <h2 className="text-lg font-bold text-[#0e121b]">Sermon Transcript</h2>
                  <span className="rounded-full bg-[#e9f0ff] px-3 py-1 text-[10px] font-semibold text-[#2f5be7]">
                    Live
                  </span>
                </div>
-               <div className="mt-4 flex items-center gap-3 rounded-full border border-[#e8ebf3] bg-[#f7f9fc] px-4 py-2">
+              <div className="mt-4 flex items-center gap-3 rounded-full border border-[#e8ebf3] bg-[#f7f9fc] px-4 py-2 focus-within:border-[#2f5be7] focus-within:ring-2 focus-within:ring-[#2f5be7]/20">
                  <span className="material-symbols-outlined text-[#8fa1b6] text-base">
                    search
                  </span>
@@ -552,14 +571,14 @@
                </div>
                <div className="mt-4 flex flex-col gap-3 max-h-[520px] overflow-y-auto pr-1">
                  {transcriptItems.map((item) => (
-                   <div
-                     className={`rounded-2xl border px-4 py-3 text-sm ${
-                       item.active
-                         ? "border-[#cdd9ff] bg-[#eef3ff] text-[#1f2a44]"
-                         : "border-[#eef1f6] bg-[#fafbff] text-[#5b6b83]"
-                     }`}
-                     key={item.time}
-                   >
+                  <div
+                    className={`rounded-2xl border px-4 py-3 text-sm transition-transform duration-200 hover:-translate-y-1 ${
+                      item.active
+                        ? "border-[#cdd9ff] bg-[#eef3ff] text-[#1f2a44]"
+                        : "border-[#eef1f6] bg-[#fafbff] text-[#5b6b83]"
+                    }`}
+                    key={item.time}
+                  >
                      <p className="text-[10px] font-semibold text-[#2f5be7]">{item.time}</p>
                      <p className="mt-2 leading-relaxed">{item.text}</p>
                    </div>

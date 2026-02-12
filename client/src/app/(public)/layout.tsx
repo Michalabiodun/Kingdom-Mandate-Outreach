@@ -2,7 +2,7 @@
 
 import { Header } from "@/components/ui/header";
 import { Footerdemo } from "@/components/ui/footer-section";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 
 export default function PublicLayout({
     children,
@@ -10,6 +10,8 @@ export default function PublicLayout({
     children: React.ReactNode;
 }) {
     const router = useRouter();
+    const pathname = usePathname();
+    const hideFooter = ["/login", "/register", "/events", "/support", "/contact"].includes(pathname);
 
     const navigation = [
         { label: "Home", href: "/", onClick: () => router.push("/") },
@@ -33,7 +35,7 @@ export default function PublicLayout({
             <main className="flex-1">
                 {children}
             </main>
-            <Footerdemo />
+            {hideFooter ? null : <Footerdemo />}
         </div>
     );
 }

@@ -216,7 +216,7 @@ export default function OneOnOneBookingPage() {
             Courses / Library
           </Link>
           <Link
-            href="/dashboard"
+            href="/dashboard/prayer-requests"
             className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold text-[#5b6b83] hover:bg-[#f1f4ff]"
             onClick={() => setIsSidebarOpen(false)}
           >
@@ -224,7 +224,7 @@ export default function OneOnOneBookingPage() {
             Calendar/Events
           </Link>
           <Link
-            href="/dashboard"
+            href="/dashboard/prayer-requests"
             className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold text-[#5b6b83] hover:bg-[#f1f4ff]"
             onClick={() => setIsSidebarOpen(false)}
           >
@@ -259,15 +259,25 @@ export default function OneOnOneBookingPage() {
         <div className="mt-auto px-4 pb-6">
           <div className="border-t border-[#e8ebf3] pt-5">
             <Link
-              href="/dashboard"
+              href="/dashboard/profile"
               className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold text-[#5b6b83] hover:bg-[#f1f4ff]"
               onClick={() => setIsSidebarOpen(false)}
             >
               <span className="material-symbols-outlined text-lg">settings</span>
               Settings
             </Link>
-            <button className="mt-4 w-full rounded-xl border border-[#e8ebf3] px-4 py-3 text-sm font-semibold text-[#1f2a44] hover:bg-[#f7f9fc]">
-              View Profile
+            <button
+              className="mt-4 w-full rounded-xl border border-[#e8ebf3] px-4 py-3 text-sm font-semibold text-[#1f2a44] hover:bg-[#f7f9fc]"
+              onClick={() => {
+                setIsSidebarOpen(false);
+                sessionStorage.removeItem("km-auth");
+                sessionStorage.removeItem("km-onboarding");
+                sessionStorage.removeItem("km-preferences");
+                window.dispatchEvent(new Event("km-session"));
+                router.push("/login");
+              }}
+            >
+              Log Out
             </button>
           </div>
         </div>
@@ -286,7 +296,7 @@ export default function OneOnOneBookingPage() {
         </Link>
         <nav className="flex flex-col gap-1 px-4">
           <Link
-            href="/dashboard/calendar"
+            href="/dashboard"
             className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold text-[#5b6b83] hover:bg-[#f1f4ff]"
           >
             <span className="material-symbols-outlined text-lg">home</span>
@@ -300,14 +310,14 @@ export default function OneOnOneBookingPage() {
             Courses / Library
           </Link>
           <Link
-            href="/dashboard"
+            href="/dashboard/calendar"
             className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold text-[#5b6b83] hover:bg-[#f1f4ff]"
           >
             <span className="material-symbols-outlined text-lg">calendar_month</span>
             Calendar/Events
           </Link>
           <Link
-            href="/dashboard"
+            href="/dashboard/prayer-requests"
             className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold text-[#5b6b83] hover:bg-[#f1f4ff]"
           >
             <span className="material-symbols-outlined text-lg">volunteer_activism</span>
@@ -338,14 +348,23 @@ export default function OneOnOneBookingPage() {
         <div className="mt-auto px-4 pb-6">
           <div className="border-t border-[#e8ebf3] pt-5">
             <Link
-              href="/dashboard"
+              href="/dashboard/profile"
               className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold text-[#5b6b83] hover:bg-[#f1f4ff]"
             >
               <span className="material-symbols-outlined text-lg">settings</span>
               Settings
             </Link>
-            <button className="mt-4 w-full rounded-xl border border-[#e8ebf3] px-4 py-3 text-sm font-semibold text-[#1f2a44] hover:bg-[#f7f9fc]">
-              View Profile
+            <button
+              className="mt-4 w-full rounded-xl border border-[#e8ebf3] px-4 py-3 text-sm font-semibold text-[#1f2a44] hover:bg-[#f7f9fc]"
+              onClick={() => {
+                sessionStorage.removeItem("km-auth");
+                sessionStorage.removeItem("km-onboarding");
+                sessionStorage.removeItem("km-preferences");
+                window.dispatchEvent(new Event("km-session"));
+                router.push("/login");
+              }}
+            >
+              Log Out
             </button>
           </div>
         </div>
@@ -359,7 +378,7 @@ export default function OneOnOneBookingPage() {
             >
               <span className="material-symbols-outlined">menu</span>
             </button>
-            <div className="flex items-center gap-3 w-full rounded-full border border-[#e8ebf3] bg-[#f7f9fc] px-4 py-2">
+            <div className="flex items-center gap-3 w-full rounded-full border border-[#e8ebf3] bg-[#f7f9fc] px-4 py-2 focus-within:border-[#2f5be7] focus-within:ring-2 focus-within:ring-[#2f5be7]/20">
               <span className="material-symbols-outlined text-[#8fa1b6] text-base">
                 search
               </span>
@@ -393,7 +412,7 @@ export default function OneOnOneBookingPage() {
         </header>
         <main className="flex-1 px-4 py-6 md:px-6 lg:px-10 lg:py-10">
           <section className="mx-auto w-full max-w-5xl">
-            <div className="rounded-[32px] border border-[#e6ebf2] bg-white shadow-[0_30px_80px_rgba(15,23,42,0.12)] overflow-hidden">
+            <div className="rounded-[32px] border border-[#e6ebf2] bg-white shadow-[0_30px_80px_rgba(15,23,42,0.12)] overflow-hidden transition-transform duration-200 hover:-translate-y-1">
               <div className="flex flex-col gap-2 border-b border-[#e9eef7] bg-[#f8faff] px-6 py-6 md:px-10">
                 <div className="flex items-center justify-between gap-4">
                   <h1 className="text-2xl md:text-3xl font-bold text-[#111827]">
@@ -457,7 +476,7 @@ export default function OneOnOneBookingPage() {
                       </span>
                     </div>
                   </div>
-                  <div className="rounded-2xl border border-[#e6ecf7] bg-[#f1f5ff] p-4">
+                  <div className="rounded-2xl border border-[#e6ecf7] bg-[#f1f5ff] p-4 transition-transform duration-200 hover:-translate-y-1">
                     <div className="flex items-start gap-3">
                       <div className="size-9 rounded-full bg-[#2f5be7]/10 text-[#2f5be7] flex items-center justify-center">
                         <span className="material-symbols-outlined text-base">info</span>
@@ -487,13 +506,13 @@ export default function OneOnOneBookingPage() {
                       </button>
                     </div>
                   </div>
-                  <div className="rounded-2xl border border-[#e5e7f2] bg-white p-4">
+                  <div className="rounded-2xl border border-[#e5e7f2] bg-white p-4 transition-transform duration-200 hover:-translate-y-1">
                     <div className="text-center text-sm font-semibold text-[#111827]">
                       October 2024
                     </div>
                     <div className="mt-4 grid grid-cols-7 gap-2 text-[11px] font-semibold text-[#9aa4b2]">
-                      {["S", "M", "T", "W", "T", "F", "S"].map((label) => (
-                        <div className="text-center" key={label}>
+                      {["S", "M", "T", "W", "T", "F", "S"].map((label, index) => (
+                        <div className="text-center" key={`${label}-${index}`}>
                           {label}
                         </div>
                       ))}

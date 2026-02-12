@@ -1,14 +1,14 @@
 import Image from "next/image";
 import Link from "next/link";
 
+const founder = {
+  name: "Dr. Rev. Modupe Ejide",
+  role: "FOUNDER & SENIOR PASTOR",
+  bio: "Dr. Rev. Modupe Ejide is a visionary and pioneer of Kingdom Mandate, co-founder of Kabod Glory Revival Ministries and also founder of “Health & Sagacity Master Class. Her calling focuses on worshipping in spirit and in truth. She encourages people to be alone with God via prayer and soaking in his presence.",
+  photo: "/assets/founder.jpg",
+};
+
 const team = [
-  {
-    name: "Dr. Samuel Kingsley",
-    role: "SENIOR PASTOR",
-    bio: "Dr. Kingsley has served the ministry for over 20 years with a heart for global missions and theological education.",
-    photo:
-      "https://lh3.googleusercontent.com/aida-public/AB6AXuDYW5wuJq2Q6-5yFchB1Mjx5taseof-dU-qtUAs4NfpHLqvdirZrJPaPyd_VuD7JfK-7gx5uBdE98bWttKfDZeOXxFV_43eOVGiBwJ8574aFMIwqxXXvpZjZ9HofSK-0piY19TzwV5qiPz-6vsCqBDFh5tJqvMxZHSA6y3Zd73vU7F89eq6gvTBO0DiySY7B0N6TAXsbbphqvOQaxLJkf1mOJJnmko4sFb7nHO9pRoz13XA6EZTtXZrS2f4-QnWS7_8zNrqo7-fkM0y",
-  },
   {
     name: "Sarah Mitchell",
     role: "DIRECTOR OF OPERATIONS",
@@ -37,13 +37,6 @@ const team = [
     photo:
       "https://lh3.googleusercontent.com/aida-public/AB6AXuDYW5wuJq2Q6-5yFchB1Mjx5taseof-dU-qtUAs4NfpHLqvdirZrJPaPyd_VuD7JfK-7gx5uBdE98bWttKfDZeOXxFV_43eOVGiBwJ8574aFMIwqxXXvpZjZ9HofSK-0piY19TzwV5qiPz-6vsCqBDFh5tJqvMxZHSA6y3Zd73vU7F89eq6gvTBO0DiySY7B0N6TAXsbbphqvOQaxLJkf1mOJJnmko4sFb7nHO9pRoz13XA6EZTtXZrS2f4-QnWS7_8zNrqo7-fkM0y",
   },
-  {
-    name: "Jonathan Pierce",
-    role: "YOUTH MINISTRY LEAD",
-    bio: "Jonathan is passionate about building strong spiritual foundations for youth through engagement and outreach.",
-    photo:
-      "https://lh3.googleusercontent.com/aida-public/AB6AXuBVj0p9F9Ov9b1rt4G0mbgVwnNtZgZJ4TrKXPPDln_AAISbgzpJpc4gsFYpgHoLfYkE_XGBm-bJkjJ973pBBnGoozwAI1Ku5UOaF5X54bK_EceFy9C0ZmoPZnml1YHExoNvpSFJMudO_fDdyMJMyG0gjx4ksVEZYU_UoSH7GncilhaxzuShiCU7DV0rW7oXHAT4M1YCi3dQusfM5ESrDbfULxmiIyLzZZUAi0HInNM3WELsrASp9Q9XuK_ZYgqBpBZ6Xle1lh0JoTiV",
-  },
 ];
 
 export default function About() {
@@ -58,7 +51,10 @@ export default function About() {
             Our Mission
           </h1>
           <p className="mt-4 md:mt-6 text-(--text-muted) text-base md:text-lg max-w-3xl mx-auto leading-relaxed">
-            Kingdom Mandate is dedicated to fostering spiritual maturity and leadership excellence through a biblical foundation and modern ministry approach. We exist to empower individuals to fulfill their divine calling and equip the next generation of spiritual leaders for global impact.
+          Kingdom Mandate Outreach is a spiritual movement rooted in the Word of God and the power of the Holy Spirit. 
+          Our mission is to awaken hearts, restore lives, and equip believers to walk in divine purpose.
+          Through prayer, teaching, and outreach, we cultivate a community that reflects the love and authority of Christ. 
+          The Tree of Life symbolizes our commitment to growth, healing, and fruitfulness.
           </p>
         </div>
       </section>
@@ -70,7 +66,45 @@ export default function About() {
           </h2>
           <div className="h-1 w-20 bg-(--accent-primary) rounded-full"></div>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
+        <div className="glass-panel rounded-3xl p-6 md:p-8 mb-8 flex flex-col lg:flex-row gap-6 lg:gap-10 items-center">
+          <div className="w-full lg:w-[42%]">
+            <div className="relative w-full aspect-[4/3] rounded-2xl overflow-hidden border-2 border-(--accent-primary)">
+              <Image
+                alt={founder.name}
+                className="h-full w-full object-cover"
+                src={founder.photo}
+                fill
+                sizes="(max-width: 1024px) 100vw, 40vw"
+              />
+            </div>
+          </div>
+          <div className="flex-1 flex flex-col gap-4 text-center lg:text-left">
+            <div>
+              <p className="text-(--text-muted) text-xs md:text-sm font-semibold tracking-[0.2em] uppercase">
+                Founder
+              </p>
+              <h3 className="text-(--accent-primary) font-extrabold text-2xl md:text-3xl">
+                {founder.name}
+              </h3>
+              <p className="text-(--text-muted) text-sm md:text-base font-semibold mt-1">
+                {founder.role}
+              </p>
+            </div>
+            <p className="text-(--text-muted) text-sm md:text-base leading-relaxed">
+              {founder.bio}
+            </p>
+            <div className="flex items-center justify-center lg:justify-start gap-4">
+              <Link href="/dashboard" className="text-(--accent-primary) font-bold text-sm hover:underline">
+                Read More
+              </Link>
+              <div className="flex items-center gap-3 text-(--text-muted)">
+                <span className="material-symbols-outlined text-base">share</span>
+                <span className="material-symbols-outlined text-base">visibility</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
           {team.map((member) => (
             <div key={member.name} className="glass-panel rounded-2xl p-6 flex flex-col gap-4 transition-transform hover:-translate-y-1">
               <div className="flex items-center gap-4">

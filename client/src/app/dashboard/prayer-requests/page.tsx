@@ -4,50 +4,22 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState, useSyncExternalStore } from "react";
 
-const lessonResources = [
-  {
-    name: "Leadership_Basics_Study_Guide.pdf",
-    size: "4.2 MB · PDF Document",
-    icon: "picture_as_pdf",
-  },
-  {
-    name: "Weekly_Ministry_Goals.docx",
-    size: "1.5 MB · Word Doc",
-    icon: "description",
-  },
+const prayerCategories = [
+  "Healing",
+  "Family",
+  "Guidance",
+  "Provision",
+  "Salvation",
+  "Thanksgiving",
 ];
 
-const modules = [
-  {
-    title: "Module 1: Foundations",
-    status: "4/4 Completed",
-    lessons: [
-      { title: "Introduction to Mandate", time: "12:40" },
-      { title: "Core Spiritual Principles", time: "15:20" },
-    ],
-  },
-  {
-    title: "Module 2: Servant Leadership",
-    status: "Active",
-    lessons: [
-      { title: "The Heart of a Servant", time: "Now Playing", active: true },
-      { title: "Authority & Submission", time: "21:05" },
-      { title: "Conflict Resolution", time: "18:30" },
-    ],
-  },
-  {
-    title: "Module 3: Vision Casting",
-    status: "Locked",
-    lessons: [
-      { title: "Clarity in Purpose", time: "16:10" },
-      { title: "Building the Team", time: "19:00" },
-    ],
-  },
-];
-
-export default function CoursesPage() {
+export default function PrayerRequestsPage() {
   const router = useRouter();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [prayer, setPrayer] = useState("");
+  const [category, setCategory] = useState("");
+  const [isAnonymous, setIsAnonymous] = useState(false);
+  const [isSubmitted, setIsSubmitted] = useState(false);
 
   const subscribe = (callback: () => void) => {
     if (typeof window === "undefined") {
@@ -206,14 +178,14 @@ export default function CoursesPage() {
           </Link>
           <Link
             href="/dashboard/courses"
-            className="flex items-center gap-3 rounded-xl bg-[#2f5be7] text-white px-4 py-3 text-sm font-semibold"
+            className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold text-[#5b6b83] hover:bg-[#f1f4ff]"
             onClick={() => setIsSidebarOpen(false)}
           >
             <span className="material-symbols-outlined text-lg">menu_book</span>
             Courses / Library
           </Link>
           <Link
-            href="/dashboard/prayer-requests"
+            href="/dashboard/calendar"
             className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold text-[#5b6b83] hover:bg-[#f1f4ff]"
             onClick={() => setIsSidebarOpen(false)}
           >
@@ -222,7 +194,7 @@ export default function CoursesPage() {
           </Link>
           <Link
             href="/dashboard/prayer-requests"
-            className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold text-[#5b6b83] hover:bg-[#f1f4ff]"
+            className="flex items-center gap-3 rounded-xl bg-[#2f5be7] text-white px-4 py-3 text-sm font-semibold"
             onClick={() => setIsSidebarOpen(false)}
           >
             <span className="material-symbols-outlined text-lg">volunteer_activism</span>
@@ -280,7 +252,7 @@ export default function CoursesPage() {
         </div>
       </aside>
       <aside className="hidden lg:flex w-[280px] flex-col border-r border-[#e8ebf3] bg-white">
-        <Link href="/" className="flex items-center gap-3 px-6 py-6">
+        <div className="flex items-center gap-3 px-6 py-6">
           <div className="size-10 rounded-xl bg-[#2f5be7] text-white flex items-center justify-center">
             <span className="material-symbols-outlined text-xl">dashboard</span>
           </div>
@@ -290,7 +262,7 @@ export default function CoursesPage() {
               Leadership Hub
             </p>
           </div>
-        </Link>
+        </div>
         <nav className="flex flex-col gap-1 px-4">
           <Link
             href="/dashboard"
@@ -301,7 +273,7 @@ export default function CoursesPage() {
           </Link>
           <Link
             href="/dashboard/courses"
-            className="flex items-center gap-3 rounded-xl bg-[#2f5be7] text-white px-4 py-3 text-sm font-semibold"
+            className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold text-[#5b6b83] hover:bg-[#f1f4ff]"
           >
             <span className="material-symbols-outlined text-lg">menu_book</span>
             Courses / Library
@@ -315,7 +287,7 @@ export default function CoursesPage() {
           </Link>
           <Link
             href="/dashboard/prayer-requests"
-            className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold text-[#5b6b83] hover:bg-[#f1f4ff]"
+            className="flex items-center gap-3 rounded-xl bg-[#2f5be7] text-white px-4 py-3 text-sm font-semibold"
           >
             <span className="material-symbols-outlined text-lg">volunteer_activism</span>
             Prayer Requests
@@ -381,7 +353,7 @@ export default function CoursesPage() {
               </span>
               <input
                 className="w-full bg-transparent text-sm text-[#1f2a44] outline-none"
-                placeholder="Search courses or lessons..."
+                placeholder="Search prayer requests..."
                 type="text"
               />
             </div>
@@ -408,160 +380,155 @@ export default function CoursesPage() {
           </div>
         </header>
         <main className="flex-1 px-4 py-6 md:px-6 lg:px-10 lg:py-10">
-          <div className="grid grid-cols-1 gap-8 xl:grid-cols-[1.6fr_1fr]">
-            <div className="space-y-6">
-              <div className="flex items-center gap-2 text-xs font-semibold text-[#8fa1b6]">
-                <Link className="hover:text-[#2f5be7]" href="/dashboard">
-                  Dashboard
-                </Link>
-                <span>/</span>
-                <span className="text-[#2f5be7]">Kingdom Leadership 101</span>
-              </div>
-              <h1 className="text-2xl md:text-4xl font-bold text-[#111827]">
-                Kingdom Leadership 101
-              </h1>
-              <div className="rounded-2xl border border-[#e5e7f2] bg-white px-6 py-5 transition-transform duration-200 hover:-translate-y-1">
-                <div className="flex items-center justify-between text-sm font-semibold text-[#1f2a44]">
-                  <span>Overall Course Progress</span>
-                  <span className="text-[#2f5be7]">65%</span>
+          <section className="mx-auto w-full max-w-4xl">
+            <div className="rounded-[28px] border border-[#e6ebf2] bg-white shadow-[0_30px_80px_rgba(15,23,42,0.12)] overflow-hidden transition-transform duration-200 hover:-translate-y-1">
+              {isSubmitted ? (
+                <div className="px-8 py-12 md:px-12 md:py-14 text-center">
+                  <div className="mx-auto size-16 rounded-full bg-[#e9efff] flex items-center justify-center text-[#2f5be7]">
+                    <span className="material-symbols-outlined text-3xl">check</span>
+                  </div>
+                  <h1 className="mt-6 text-2xl md:text-3xl font-bold text-[#111827]">
+                    Request Sent
+                  </h1>
+                  <p className="mt-3 text-sm md:text-base text-[#6b7280]">
+                    Your prayer request has been received. Our community and leadership are
+                    standing in faith with you.
+                  </p>
+                  <div className="mt-8 flex flex-col gap-3">
+                    <button
+                      className="h-11 rounded-xl bg-[#2f5be7] text-white text-sm font-semibold hover:brightness-110"
+                      onClick={() => setIsSubmitted(false)}
+                    >
+                      View Prayer Wall
+                    </button>
+                    <button
+                      className="h-11 rounded-xl border border-[#d7deea] text-sm font-semibold text-[#2f5be7] hover:bg-[#f1f4ff]"
+                      onClick={() => router.push("/dashboard")}
+                    >
+                      Back to Dashboard
+                    </button>
+                    <button
+                      className="text-xs font-semibold text-[#9aa4b2]"
+                      onClick={() => router.push("/dashboard")}
+                    >
+                      Dismiss
+                    </button>
+                  </div>
                 </div>
-                <div className="mt-3 h-2 rounded-full bg-[#e8ecf6]">
-                  <div className="h-2 w-[65%] rounded-full bg-[#2f5be7]" />
-                </div>
-                <p className="mt-2 text-xs text-[#94a3b8]">12 of 18 lessons completed</p>
-              </div>
-              <div className="rounded-3xl border border-[#e5e7f2] bg-white p-4 shadow-[0_14px_30px_rgba(15,23,42,0.08)] transition-transform duration-200 hover:-translate-y-1">
-                <div className="relative aspect-video overflow-hidden rounded-2xl bg-[#0f172a]">
-                  <div
-                    className="absolute inset-0 bg-cover bg-center"
-                    style={{
-                      backgroundImage:
-                        'url("https://images.unsplash.com/photo-1521737604893-d14cc237f11d?q=80&w=1600&auto=format&fit=crop")',
-                    }}
-                  />
-                  <div className="absolute inset-0 bg-black/35" />
-                  <button className="absolute inset-0 m-auto size-16 rounded-full bg-[#2f5be7] text-white flex items-center justify-center shadow-[0_10px_30px_rgba(46,91,231,0.35)]">
-                    <span className="material-symbols-outlined text-3xl">play_arrow</span>
-                  </button>
-                  <div className="absolute bottom-4 left-4 right-4 flex items-center justify-between text-xs text-white">
-                    <span>08:45 / 24:00</span>
-                    <div className="flex items-center gap-2">
-                      <div className="h-1.5 w-24 rounded-full bg-white/30">
-                        <div className="h-1.5 w-[35%] rounded-full bg-white" />
+              ) : (
+                <>
+                  <div className="border-b border-[#e9eef7] bg-[#f8faff] px-6 py-6 md:px-10">
+                    <div className="flex items-center justify-between gap-4">
+                      <div>
+                        <h1 className="text-2xl md:text-3xl font-bold text-[#111827]">
+                          Submit a Prayer Request
+                        </h1>
+                        <p className="mt-2 text-sm text-[#6b7280]">
+                          We are here to stand with you in faith.
+                        </p>
                       </div>
-                      <button className="size-8 rounded-full bg-white/20 flex items-center justify-center">
-                        <span className="material-symbols-outlined text-base">settings</span>
+                      <button
+                        className="size-8 rounded-full border border-[#e0e6f2] text-[#9aa4b2] flex items-center justify-center"
+                        onClick={() => router.push("/dashboard")}
+                      >
+                        <span className="material-symbols-outlined text-base">close</span>
                       </button>
                     </div>
                   </div>
-                </div>
-                <div className="mt-5">
-                  <h2 className="text-lg font-bold text-[#111827]">Lesson Resources</h2>
-                  <div className="mt-4 grid gap-3 md:grid-cols-2">
-                    {lessonResources.map((resource) => (
-                      <div
-                        className="flex items-center justify-between rounded-2xl border border-[#e8ebf3] bg-[#f8faff] px-4 py-3 transition-transform duration-200 hover:-translate-y-1"
-                        key={resource.name}
-                      >
-                        <div className="flex items-center gap-3">
-                          <div className="size-10 rounded-xl bg-white border border-[#e5e7f2] flex items-center justify-center text-[#2f5be7]">
-                            <span className="material-symbols-outlined text-xl">
-                              {resource.icon}
-                            </span>
-                          </div>
-                          <div>
-                            <p className="text-sm font-semibold text-[#111827]">
-                              {resource.name}
-                            </p>
-                            <p className="text-xs text-[#8b95a7]">{resource.size}</p>
-                          </div>
-                        </div>
-                        <button className="size-10 rounded-xl border border-[#e5e7f2] text-[#2f5be7] flex items-center justify-center">
-                          <span className="material-symbols-outlined text-lg">download</span>
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </div>
-            <aside className="rounded-3xl border border-[#e5e7f2] bg-white p-5 md:p-6 shadow-[0_20px_50px_rgba(15,23,42,0.08)] h-fit transition-transform duration-200 hover:-translate-y-1">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-xs font-semibold tracking-[0.2em] text-[#94a3b8] uppercase">
-                    Course Content
-                  </p>
-                  <p className="mt-1 text-sm text-[#6b7280]">
-                    18 lessons across 4 modules
-                  </p>
-                </div>
-                <div className="size-10 rounded-full bg-[#eef3ff] text-[#2f5be7] flex items-center justify-center">
-                  <span className="material-symbols-outlined text-lg">menu_book</span>
-                </div>
-              </div>
-              <div className="mt-6 space-y-5">
-                {modules.map((module) => (
-                  <div className="space-y-3" key={module.title}>
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <span className="material-symbols-outlined text-[#94a3b8] text-base">
-                          expand_more
-                        </span>
-                        <p className="text-sm font-semibold text-[#111827]">{module.title}</p>
-                      </div>
-                      <span
-                        className={`rounded-full px-3 py-1 text-[10px] font-semibold ${
-                          module.status === "Active"
-                            ? "bg-[#eaf1ff] text-[#2f5be7]"
-                            : module.status === "Locked"
-                              ? "bg-[#f1f5f9] text-[#94a3b8]"
-                              : "bg-[#eef3ff] text-[#2f5be7]"
-                        }`}
-                      >
-                        {module.status}
-                      </span>
-                    </div>
+                  <form
+                    className="px-6 py-6 md:px-10 md:py-8 space-y-6"
+                    onSubmit={(event) => {
+                      event.preventDefault();
+                      setIsSubmitted(true);
+                    }}
+                  >
                     <div className="space-y-2">
-                      {module.lessons.map((lesson) => (
-                        <div
-                          className={`flex items-center justify-between rounded-2xl border px-4 py-3 transition-transform duration-200 hover:-translate-y-1 ${
-                            lesson.active
-                              ? "border-[#cdd9ff] bg-[#eef3ff]"
-                              : "border-[#e8ebf3] bg-[#f8faff]"
-                          }`}
-                          key={lesson.title}
-                        >
-                          <div className="flex items-center gap-3">
-                            <span
-                              className={`size-6 rounded-full flex items-center justify-center text-xs font-semibold ${
-                                lesson.active ? "bg-[#2f5be7] text-white" : "bg-white text-[#94a3b8]"
-                              }`}
-                            >
-                              {lesson.active ? "▶" : "•"}
-                            </span>
-                            <div>
-                              <p className="text-sm font-semibold text-[#111827]">
-                                {lesson.title}
-                              </p>
-                              <p className="text-xs text-[#8b95a7]">{lesson.time}</p>
-                            </div>
-                          </div>
-                          {lesson.active ? (
-                            <span className="rounded-full bg-[#2f5be7] px-3 py-1 text-[10px] font-semibold text-white">
-                              Now Playing
-                            </span>
-                          ) : null}
-                        </div>
-                      ))}
+                      <label className="text-xs font-semibold tracking-[0.2em] text-[#64748b] uppercase flex items-center gap-2">
+                        <span className="material-symbols-outlined text-[#2f5be7] text-base">
+                          campaign
+                        </span>
+                        Your Prayer
+                      </label>
+                      <textarea
+                        className="min-h-[140px] w-full rounded-2xl border border-[#e5e7f2] bg-white px-4 py-3 text-sm text-[#111827] placeholder:text-[#9aa4b2] focus:border-[#2f5be7] focus:outline-none focus:ring-2 focus:ring-[#2f5be7]/20"
+                        placeholder="Share your heart..."
+                        value={prayer}
+                        onChange={(event) => setPrayer(event.target.value)}
+                      />
                     </div>
-                  </div>
-                ))}
-              </div>
-              <button className="mt-6 w-full rounded-2xl bg-[#2f5be7] px-4 py-3 text-sm font-semibold text-white shadow-[0_14px_24px_rgba(46,91,231,0.24)] hover:brightness-110">
-                Mark as Complete
-              </button>
-            </aside>
-          </div>
+                    <div className="grid grid-cols-1 gap-4 md:grid-cols-[1.2fr_1fr]">
+                      <div className="space-y-2">
+                        <label className="text-xs font-semibold tracking-[0.2em] text-[#64748b] uppercase flex items-center gap-2">
+                          <span className="material-symbols-outlined text-[#2f5be7] text-base">
+                            category
+                          </span>
+                          Prayer Category
+                        </label>
+                        <div className="relative">
+                          <select
+                            className="h-12 w-full appearance-none rounded-xl border border-[#e5e7f2] bg-white px-4 text-sm text-[#111827] focus:border-[#2f5be7] focus:outline-none focus:ring-2 focus:ring-[#2f5be7]/20"
+                            value={category}
+                            onChange={(event) => setCategory(event.target.value)}
+                          >
+                            <option value="">Select Category</option>
+                            {prayerCategories.map((item) => (
+                              <option key={item} value={item}>
+                                {item}
+                              </option>
+                            ))}
+                          </select>
+                          <span className="material-symbols-outlined absolute right-4 top-1/2 -translate-y-1/2 text-[#9aa4b2] text-base">
+                            expand_more
+                          </span>
+                        </div>
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-xs font-semibold tracking-[0.2em] text-[#64748b] uppercase flex items-center gap-2">
+                          <span className="material-symbols-outlined text-[#2f5be7] text-base">
+                            lock
+                          </span>
+                          Privacy
+                        </label>
+                        <div className="flex items-center justify-between rounded-xl border border-[#e5e7f2] bg-white px-4 py-3">
+                          <p className="text-sm font-semibold text-[#111827]">
+                            Post Anonymously
+                          </p>
+                          <label className="relative inline-flex cursor-pointer items-center">
+                            <input
+                              type="checkbox"
+                              className="sr-only peer"
+                              checked={isAnonymous}
+                              onChange={(event) => setIsAnonymous(event.target.checked)}
+                            />
+                            <div className="h-6 w-11 rounded-full bg-[#e5e7f2] transition peer-checked:bg-[#2f5be7] after:absolute after:left-[2px] after:top-[2px] after:h-5 after:w-5 after:rounded-full after:bg-white after:transition after:content-[''] peer-checked:after:translate-x-5" />
+                          </label>
+                        </div>
+                      </div>
+                    </div>
+                    <p className="text-xs text-[#9aa4b2] text-center italic">
+                      “For where two or three are gathered together in my name, there am I
+                      in the midst of them.” — Matthew 18:20
+                    </p>
+                    <div className="flex flex-col sm:flex-row justify-end gap-3 pt-2">
+                      <button
+                        type="button"
+                        className="h-11 rounded-xl border border-[#d7deea] px-6 text-sm font-semibold text-[#6b7280] hover:bg-[#f7f9fc]"
+                        onClick={() => router.push("/dashboard")}
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        type="submit"
+                        className="h-11 rounded-xl bg-[#2f5be7] px-6 text-sm font-semibold text-white hover:brightness-110"
+                      >
+                        Send Request
+                      </button>
+                    </div>
+                  </form>
+                </>
+              )}
+            </div>
+          </section>
         </main>
       </div>
     </div>

@@ -156,7 +156,7 @@ export default function Dashboard() {
         </div>
         <nav className="flex flex-col gap-1 px-4">
           <Link
-            href="/dashboard"
+            href="/dashboard/prayer-requests"
             className="flex items-center gap-3 rounded-xl bg-[#2f5be7] text-white px-4 py-3 text-sm font-semibold"
             onClick={() => setIsSidebarOpen(false)}
           >
@@ -180,7 +180,7 @@ export default function Dashboard() {
             Calendar/Events
           </Link>
           <Link
-            href="/dashboard"
+            href="/dashboard/prayer-requests"
             className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold text-[#5b6b83] hover:bg-[#f1f4ff]"
             onClick={() => setIsSidebarOpen(false)}
           >
@@ -215,15 +215,25 @@ export default function Dashboard() {
         <div className="mt-auto px-4 pb-6">
           <div className="border-t border-[#e8ebf3] pt-5">
             <Link
-              href="/dashboard"
+              href="/dashboard/profile"
               className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold text-[#5b6b83] hover:bg-[#f1f4ff]"
               onClick={() => setIsSidebarOpen(false)}
             >
               <span className="material-symbols-outlined text-lg">settings</span>
               Settings
             </Link>
-            <button className="mt-4 w-full rounded-xl border border-[#e8ebf3] px-4 py-3 text-sm font-semibold text-[#1f2a44] hover:bg-[#f7f9fc]">
-              View Profile
+            <button
+              className="mt-4 w-full rounded-xl border border-[#e8ebf3] px-4 py-3 text-sm font-semibold text-[#1f2a44] hover:bg-[#f7f9fc]"
+              onClick={() => {
+                setIsSidebarOpen(false);
+                sessionStorage.removeItem("km-auth");
+                sessionStorage.removeItem("km-onboarding");
+                sessionStorage.removeItem("km-preferences");
+                window.dispatchEvent(new Event("km-session"));
+                router.push("/login");
+              }}
+            >
+              Log Out
             </button>
           </div>
         </div>
@@ -263,7 +273,7 @@ export default function Dashboard() {
             Calendar/Events
           </Link>
           <Link
-            href="/dashboard"
+            href="/dashboard/prayer-requests"
             className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold text-[#5b6b83] hover:bg-[#f1f4ff]"
           >
             <span className="material-symbols-outlined text-lg">volunteer_activism</span>
@@ -294,14 +304,23 @@ export default function Dashboard() {
         <div className="mt-auto px-4 pb-6">
           <div className="border-t border-[#e8ebf3] pt-5">
             <Link
-              href="/dashboard"
+              href="/dashboard/profile"
               className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold text-[#5b6b83] hover:bg-[#f1f4ff]"
             >
               <span className="material-symbols-outlined text-lg">settings</span>
               Settings
             </Link>
-            <button className="mt-4 w-full rounded-xl border border-[#e8ebf3] px-4 py-3 text-sm font-semibold text-[#1f2a44] hover:bg-[#f7f9fc]">
-              View Profile
+            <button
+              className="mt-4 w-full rounded-xl border border-[#e8ebf3] px-4 py-3 text-sm font-semibold text-[#1f2a44] hover:bg-[#f7f9fc]"
+              onClick={() => {
+                sessionStorage.removeItem("km-auth");
+                sessionStorage.removeItem("km-onboarding");
+                sessionStorage.removeItem("km-preferences");
+                window.dispatchEvent(new Event("km-session"));
+                router.push("/login");
+              }}
+            >
+              Log Out
             </button>
           </div>
         </div>
@@ -315,7 +334,7 @@ export default function Dashboard() {
             >
               <span className="material-symbols-outlined">menu</span>
             </button>
-            <div className="flex items-center gap-3 w-full rounded-full border border-[#e8ebf3] bg-[#f7f9fc] px-4 py-2">
+            <div className="flex items-center gap-3 w-full rounded-full border border-[#e8ebf3] bg-[#f7f9fc] px-4 py-2 focus-within:border-[#2f5be7] focus-within:ring-2 focus-within:ring-[#2f5be7]/20">
               <span className="material-symbols-outlined text-[#8fa1b6] text-base">
                 search
               </span>
@@ -350,7 +369,7 @@ export default function Dashboard() {
         <main className="flex-1 px-4 py-5 md:px-6 md:py-6 lg:px-10 lg:py-8">
           <div className="grid grid-cols-1 gap-6 xl:grid-cols-[1fr_300px]">
             <div className="flex flex-col gap-6">
-              <section className="rounded-3xl border border-[#e8ebf3] bg-white p-6 lg:p-8 shadow-sm">
+              <section className="rounded-3xl border border-[#e8ebf3] bg-white p-6 lg:p-8 shadow-sm transition-transform duration-200 hover:-translate-y-1">
                 <div className="inline-flex items-center gap-2 rounded-full border border-[#d6e2ff] bg-[#eff4ff] px-3 py-1 text-xs font-semibold text-[#2f5be7]">
                   <span className="size-2 rounded-full bg-[#2f5be7]"></span>
                   Active Track
@@ -376,7 +395,7 @@ export default function Dashboard() {
                 </div>
               </section>
               <section className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
-                <div className="rounded-2xl border border-[#e8ebf3] bg-[#eef3ff] p-5">
+                <div className="rounded-2xl border border-[#e8ebf3] bg-[#eef3ff] p-5 transition-transform duration-200 hover:-translate-y-1">
                   <div className="size-10 rounded-xl bg-[#2f5be7]/10 text-[#2f5be7] flex items-center justify-center">
                     <span className="material-symbols-outlined">event_available</span>
                   </div>
@@ -385,7 +404,7 @@ export default function Dashboard() {
                     Schedule a 1-on-1 mentorship call with a ministry senior.
                   </p>
                 </div>
-                <div className="rounded-2xl border border-[#e8ebf3] bg-[#eef3ff] p-5">
+                <div className="rounded-2xl border border-[#e8ebf3] bg-[#eef3ff] p-5 transition-transform duration-200 hover:-translate-y-1">
                   <div className="size-10 rounded-xl bg-[#2f5be7]/10 text-[#2f5be7] flex items-center justify-center">
                     <span className="material-symbols-outlined">volunteer_activism</span>
                   </div>
@@ -394,7 +413,7 @@ export default function Dashboard() {
                     Submit your prayer requests to our dedicated intercession team.
                   </p>
                 </div>
-                <div className="rounded-2xl border border-[#e8ebf3] bg-white p-5 flex items-center justify-between md:col-span-2 xl:col-span-1">
+                <div className="rounded-2xl border border-[#e8ebf3] bg-white p-5 flex items-center justify-between md:col-span-2 xl:col-span-1 transition-transform duration-200 hover:-translate-y-1">
                   <div>
                     <p className="text-xs font-semibold tracking-[0.2em] text-[#8fa1b6]">
                       Profile Maturity
@@ -405,7 +424,7 @@ export default function Dashboard() {
                   <div className="size-20 rounded-full border-[6px] border-[#e8ebf3] border-t-[#2f5be7] rotate-45"></div>
                 </div>
               </section>
-              <section className="rounded-3xl border border-[#e8ebf3] bg-white p-6">
+              <section className="rounded-3xl border border-[#e8ebf3] bg-white p-6 transition-transform duration-200 hover:-translate-y-1">
                 <div className="flex items-center justify-between">
                   <h3 className="text-lg font-bold text-[#0e121b]">Active Courses</h3>
                   <Link href="/dashboard" className="text-sm font-semibold text-[#2f5be7]">
@@ -413,7 +432,7 @@ export default function Dashboard() {
                   </Link>
                 </div>
                 <div className="mt-4 flex flex-col gap-4">
-                  <div className="flex flex-col gap-4 rounded-2xl border border-[#e8ebf3] bg-[#f8faff] p-4 md:flex-row md:items-center md:justify-between">
+                  <div className="flex flex-col gap-4 rounded-2xl border border-[#e8ebf3] bg-[#f8faff] p-4 md:flex-row md:items-center md:justify-between transition-transform duration-200 hover:-translate-y-1">
                     <div className="flex items-center gap-4">
                       <div className="size-16 rounded-2xl bg-[#2f5be7]/10 flex items-center justify-center text-[#2f5be7] font-bold">
                         10
@@ -436,7 +455,7 @@ export default function Dashboard() {
                       </button>
                     </div>
                   </div>
-                  <div className="flex flex-col gap-4 rounded-2xl border border-[#e8ebf3] bg-[#f8faff] p-4 md:flex-row md:items-center md:justify-between">
+                  <div className="flex flex-col gap-4 rounded-2xl border border-[#e8ebf3] bg-[#f8faff] p-4 md:flex-row md:items-center md:justify-between transition-transform duration-200 hover:-translate-y-1">
                     <div className="flex items-center gap-4">
                       <div className="size-16 rounded-2xl bg-[#2f5be7]/10 flex items-center justify-center text-[#2f5be7] font-bold">
                         08
@@ -463,7 +482,7 @@ export default function Dashboard() {
               </section>
             </div>
             <aside className="flex flex-col gap-6 order-last xl:order-none">
-              <div className="rounded-3xl border border-[#e8ebf3] bg-white p-6 text-center">
+              <div className="rounded-3xl border border-[#e8ebf3] bg-white p-6 text-center transition-transform duration-200 hover:-translate-y-1">
                 <p className="text-xs font-semibold tracking-[0.2em] text-[#8fa1b6]">
                   Profile Maturity
                 </p>
@@ -486,7 +505,7 @@ export default function Dashboard() {
                   Complete Now
                 </button>
               </div>
-              <div className="rounded-3xl border border-[#e8ebf3] bg-white p-6">
+              <div className="rounded-3xl border border-[#e8ebf3] bg-white p-6 transition-transform duration-200 hover:-translate-y-1">
                 <div className="flex items-center justify-between">
                   <p className="text-xs font-semibold tracking-[0.2em] text-[#8fa1b6]">
                     Upcoming Events
@@ -495,7 +514,7 @@ export default function Dashboard() {
                     <span className="material-symbols-outlined text-base">more_horiz</span>
                   </button>
                 </div>
-                <div className="mt-4 flex items-start gap-4 rounded-2xl border border-[#e8ebf3] bg-[#f8faff] p-4">
+                <div className="mt-4 flex items-start gap-4 rounded-2xl border border-[#e8ebf3] bg-[#f8faff] p-4 transition-transform duration-200 hover:-translate-y-1">
                   <div className="flex flex-col items-center rounded-xl bg-[#2f5be7] px-3 py-2 text-white">
                     <span className="text-xs font-semibold">24</span>
                     <span className="text-[10px]">OCT</span>

@@ -182,7 +182,7 @@ export default function ProfileSettingsPage() {
         </div>
         <nav className="flex flex-col gap-1 px-4">
           <Link
-            href="/dashboard"
+            href="/dashboard/prayer-requests"
             className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold text-[#5b6b83] hover:bg-[#f1f4ff]"
             onClick={() => setIsSidebarOpen(false)}
           >
@@ -206,7 +206,7 @@ export default function ProfileSettingsPage() {
             Calendar/Events
           </Link>
           <Link
-            href="/dashboard"
+            href="/dashboard/prayer-requests"
             className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold text-[#5b6b83] hover:bg-[#f1f4ff]"
             onClick={() => setIsSidebarOpen(false)}
           >
@@ -241,15 +241,25 @@ export default function ProfileSettingsPage() {
         <div className="mt-auto px-4 pb-6">
           <div className="border-t border-[#e8ebf3] pt-5">
             <Link
-              href="/dashboard"
+              href="/dashboard/profile"
               className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold text-[#5b6b83] hover:bg-[#f1f4ff]"
               onClick={() => setIsSidebarOpen(false)}
             >
               <span className="material-symbols-outlined text-lg">settings</span>
               Settings
             </Link>
-            <button className="mt-4 w-full rounded-xl border border-[#e8ebf3] px-4 py-3 text-sm font-semibold text-[#1f2a44] hover:bg-[#f7f9fc]">
-              View Profile
+            <button
+              className="mt-4 w-full rounded-xl border border-[#e8ebf3] px-4 py-3 text-sm font-semibold text-[#1f2a44] hover:bg-[#f7f9fc]"
+              onClick={() => {
+                setIsSidebarOpen(false);
+                sessionStorage.removeItem("km-auth");
+                sessionStorage.removeItem("km-onboarding");
+                sessionStorage.removeItem("km-preferences");
+                window.dispatchEvent(new Event("km-session"));
+                router.push("/login");
+              }}
+            >
+              Log Out
             </button>
           </div>
         </div>
@@ -289,7 +299,7 @@ export default function ProfileSettingsPage() {
             Calendar/Events
           </Link>
           <Link
-            href="/dashboard"
+            href="/dashboard/prayer-requests"
             className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold text-[#5b6b83] hover:bg-[#f1f4ff]"
           >
             <span className="material-symbols-outlined text-lg">volunteer_activism</span>
@@ -320,14 +330,23 @@ export default function ProfileSettingsPage() {
         <div className="mt-auto px-4 pb-6">
           <div className="border-t border-[#e8ebf3] pt-5">
             <Link
-              href="/dashboard"
+              href="/dashboard/profile"
               className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold text-[#5b6b83] hover:bg-[#f1f4ff]"
             >
               <span className="material-symbols-outlined text-lg">settings</span>
               Settings
             </Link>
-            <button className="mt-4 w-full rounded-xl border border-[#e8ebf3] px-4 py-3 text-sm font-semibold text-[#1f2a44] hover:bg-[#f7f9fc]">
-              View Profile
+            <button
+              className="mt-4 w-full rounded-xl border border-[#e8ebf3] px-4 py-3 text-sm font-semibold text-[#1f2a44] hover:bg-[#f7f9fc]"
+              onClick={() => {
+                sessionStorage.removeItem("km-auth");
+                sessionStorage.removeItem("km-onboarding");
+                sessionStorage.removeItem("km-preferences");
+                window.dispatchEvent(new Event("km-session"));
+                router.push("/login");
+              }}
+            >
+              Log Out
             </button>
           </div>
         </div>
@@ -341,7 +360,7 @@ export default function ProfileSettingsPage() {
             >
               <span className="material-symbols-outlined">menu</span>
             </button>
-            <div className="flex items-center gap-3 w-full rounded-full border border-[#e8ebf3] bg-[#f7f9fc] px-4 py-2">
+            <div className="flex items-center gap-3 w-full rounded-full border border-[#e8ebf3] bg-[#f7f9fc] px-4 py-2 focus-within:border-[#2f5be7] focus-within:ring-2 focus-within:ring-[#2f5be7]/20">
               <span className="material-symbols-outlined text-[#8fa1b6] text-base">
                 search
               </span>
@@ -375,45 +394,8 @@ export default function ProfileSettingsPage() {
         </header>
         <main className="flex-1 px-4 py-6 md:px-6 lg:px-10 lg:py-10">
           <div className="mx-auto w-full max-w-6xl">
-            <div className="grid grid-cols-1 gap-6 lg:grid-cols-[260px_1fr]">
-              <aside className="rounded-3xl border border-[#e6ebf3] bg-white p-5 shadow-sm">
-                <div className="flex items-center gap-3">
-                  <div className="size-12 rounded-full bg-[#e9eefc] text-[#2f5be7] flex items-center justify-center">
-                    <span className="material-symbols-outlined text-xl">person</span>
-                  </div>
-                  <div>
-                    <p className="text-sm font-bold text-[#0f172a]">{userName}</p>
-                    <p className="text-[10px] font-semibold text-[#2f5be7] uppercase tracking-[0.2em]">
-                      Leadership Tier
-                    </p>
-                  </div>
-                </div>
-                <div className="mt-6 flex flex-col gap-2">
-                  {profileTabs.map((tab) => {
-                    const isActive = tab === "General";
-                    return (
-                      <button
-                        className={`flex items-center justify-between rounded-xl px-3 py-2 text-sm font-semibold ${
-                          isActive
-                            ? "bg-[#eef3ff] text-[#2f5be7]"
-                            : "text-[#5b6b83] hover:bg-[#f7f9fc]"
-                        }`}
-                        key={tab}
-                        type="button"
-                      >
-                        <span>{tab}</span>
-                        {isActive ? (
-                          <span className="material-symbols-outlined text-base">chevron_right</span>
-                        ) : null}
-                      </button>
-                    );
-                  })}
-                </div>
-                <button className="mt-6 w-full rounded-xl border border-[#e6ebf3] px-4 py-2 text-xs font-semibold text-[#e11d48]">
-                  Log Out
-                </button>
-              </aside>
-              <section className="rounded-3xl border border-[#e6ebf3] bg-white shadow-sm">
+            <div className="grid grid-cols-1 gap-6">
+              <section className="rounded-3xl border border-[#e6ebf3] bg-white shadow-sm transition-transform duration-200 hover:-translate-y-1">
                 <div className="flex flex-col gap-6 border-b border-[#edf1fb] px-6 py-6 md:flex-row md:items-center md:justify-between md:px-8">
                   <div className="flex items-center gap-4">
                     <div className="size-16 rounded-full bg-[#e9eefc] text-[#2f5be7] flex items-center justify-center">

@@ -65,7 +65,7 @@ function Footerdemo() {
                     <div className="col-span-1">
                         <h3 className="mb-4 text-lg font-semibold">Contact Us</h3>
                         <address className="space-y-2 text-sm not-italic">
-                            <p>Kingdom Mandate Outreach Center</p>
+                            <p>Kingdom Mandate Outreach</p>
                             <p>Email: info@kingdommandate.org</p>
                             <p>Support our mission today.</p>
                         </address>
@@ -76,9 +76,20 @@ function Footerdemo() {
                             <TooltipProvider>
                                 <Tooltip>
                                     <TooltipTrigger asChild>
-                                        <Button variant="outline" size="icon" className="rounded-full hover:bg-primary hover:text-white transition-colors">
-                                            <Facebook className="h-4 w-4" />
-                                            <span className="sr-only">Facebook</span>
+                                        <Button
+                                            asChild
+                                            variant="outline"
+                                            size="icon"
+                                            className="rounded-full hover:bg-primary hover:text-white transition-colors"
+                                        >
+                                            <a
+                                                href="https://www.facebook.com/profile.php?id=61582207254612"
+                                                rel="noopener noreferrer"
+                                                target="_blank"
+                                            >
+                                                <Facebook className="h-4 w-4" />
+                                                <span className="sr-only">Facebook</span>
+                                            </a>
                                         </Button>
                                     </TooltipTrigger>
                                     <TooltipContent>
@@ -89,22 +100,20 @@ function Footerdemo() {
                             <TooltipProvider>
                                 <Tooltip>
                                     <TooltipTrigger asChild>
-                                        <Button variant="outline" size="icon" className="rounded-full hover:bg-primary hover:text-white transition-colors">
-                                            <Twitter className="h-4 w-4" />
-                                            <span className="sr-only">Twitter</span>
-                                        </Button>
-                                    </TooltipTrigger>
-                                    <TooltipContent>
-                                        <p>Follow us on Twitter</p>
-                                    </TooltipContent>
-                                </Tooltip>
-                            </TooltipProvider>
-                            <TooltipProvider>
-                                <Tooltip>
-                                    <TooltipTrigger asChild>
-                                        <Button variant="outline" size="icon" className="rounded-full hover:bg-primary hover:text-white transition-colors">
-                                            <Instagram className="h-4 w-4" />
-                                            <span className="sr-only">Instagram</span>
+                                        <Button
+                                            asChild
+                                            variant="outline"
+                                            size="icon"
+                                            className="rounded-full hover:bg-primary hover:text-white transition-colors"
+                                        >
+                                            <a
+                                                href="https://www.instagram.com/kabodoutreach?igsh=YzljYTk1ODg3Zg=="
+                                                rel="noopener noreferrer"
+                                                target="_blank"
+                                            >
+                                                <Instagram className="h-4 w-4" />
+                                                <span className="sr-only">Instagram</span>
+                                            </a>
                                         </Button>
                                     </TooltipTrigger>
                                     <TooltipContent>
@@ -115,9 +124,20 @@ function Footerdemo() {
                             <TooltipProvider>
                                 <Tooltip>
                                     <TooltipTrigger asChild>
-                                        <Button variant="outline" size="icon" className="rounded-full hover:bg-primary hover:text-white transition-colors">
-                                            <Youtube className="h-4 w-4" />
-                                            <span className="sr-only">YouTube</span>
+                                        <Button
+                                            asChild
+                                            variant="outline"
+                                            size="icon"
+                                            className="rounded-full hover:bg-primary hover:text-white transition-colors"
+                                        >
+                                            <a
+                                                href="https://youtube.com/@kingdommandateoutreach-k6d9f?si=f3jAN7kSNTdnh_4q"
+                                                rel="noopener noreferrer"
+                                                target="_blank"
+                                            >
+                                                <Youtube className="h-4 w-4" />
+                                                <span className="sr-only">YouTube</span>
+                                            </a>
                                         </Button>
                                     </TooltipTrigger>
                                     <TooltipContent>

@@ -157,7 +157,7 @@ export default function TestimoniesPage() {
         </div>
         <nav className="flex flex-col gap-1 px-4">
           <Link
-            href="/dashboard"
+            href="/dashboard/prayer-requests"
             className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold text-[#5b6b83] hover:bg-[#f1f4ff]"
             onClick={() => setIsSidebarOpen(false)}
           >
@@ -181,7 +181,7 @@ export default function TestimoniesPage() {
             Calendar/Events
           </Link>
           <Link
-            href="/dashboard"
+            href="/dashboard/prayer-requests"
             className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold text-[#5b6b83] hover:bg-[#f1f4ff]"
             onClick={() => setIsSidebarOpen(false)}
           >
@@ -216,15 +216,25 @@ export default function TestimoniesPage() {
         <div className="mt-auto px-4 pb-6">
           <div className="border-t border-[#e8ebf3] pt-5">
             <Link
-              href="/dashboard"
+              href="/dashboard/profile"
               className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold text-[#5b6b83] hover:bg-[#f1f4ff]"
               onClick={() => setIsSidebarOpen(false)}
             >
               <span className="material-symbols-outlined text-lg">settings</span>
               Settings
             </Link>
-            <button className="mt-4 w-full rounded-xl border border-[#e8ebf3] px-4 py-3 text-sm font-semibold text-[#1f2a44] hover:bg-[#f7f9fc]">
-              View Profile
+            <button
+              className="mt-4 w-full rounded-xl border border-[#e8ebf3] px-4 py-3 text-sm font-semibold text-[#1f2a44] hover:bg-[#f7f9fc]"
+              onClick={() => {
+                setIsSidebarOpen(false);
+                sessionStorage.removeItem("km-auth");
+                sessionStorage.removeItem("km-onboarding");
+                sessionStorage.removeItem("km-preferences");
+                window.dispatchEvent(new Event("km-session"));
+                router.push("/login");
+              }}
+            >
+              Log Out
             </button>
           </div>
         </div>
@@ -264,7 +274,7 @@ export default function TestimoniesPage() {
             Calendar/Events
           </Link>
           <Link
-            href="/dashboard"
+            href="/dashboard/prayer-requests"
             className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold text-[#5b6b83] hover:bg-[#f1f4ff]"
           >
             <span className="material-symbols-outlined text-lg">volunteer_activism</span>
@@ -295,14 +305,23 @@ export default function TestimoniesPage() {
         <div className="mt-auto px-4 pb-6">
           <div className="border-t border-[#e8ebf3] pt-5">
             <Link
-              href="/dashboard"
+              href="/dashboard/profile"
               className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold text-[#5b6b83] hover:bg-[#f1f4ff]"
             >
               <span className="material-symbols-outlined text-lg">settings</span>
               Settings
             </Link>
-            <button className="mt-4 w-full rounded-xl border border-[#e8ebf3] px-4 py-3 text-sm font-semibold text-[#1f2a44] hover:bg-[#f7f9fc]">
-              View Profile
+            <button
+              className="mt-4 w-full rounded-xl border border-[#e8ebf3] px-4 py-3 text-sm font-semibold text-[#1f2a44] hover:bg-[#f7f9fc]"
+              onClick={() => {
+                sessionStorage.removeItem("km-auth");
+                sessionStorage.removeItem("km-onboarding");
+                sessionStorage.removeItem("km-preferences");
+                window.dispatchEvent(new Event("km-session"));
+                router.push("/login");
+              }}
+            >
+              Log Out
             </button>
           </div>
         </div>
@@ -316,7 +335,7 @@ export default function TestimoniesPage() {
             >
               <span className="material-symbols-outlined">menu</span>
             </button>
-            <div className="flex items-center gap-3 w-full rounded-full border border-[#e8ebf3] bg-[#f7f9fc] px-4 py-2">
+            <div className="flex items-center gap-3 w-full rounded-full border border-[#e8ebf3] bg-[#f7f9fc] px-4 py-2 focus-within:border-[#2f5be7] focus-within:ring-2 focus-within:ring-[#2f5be7]/20">
               <span className="material-symbols-outlined text-[#8fa1b6] text-base">
                 search
               </span>
@@ -361,7 +380,7 @@ export default function TestimoniesPage() {
                 Your testimony encourages others and strengthens the Kingdom family.
               </p>
             </div>
-            <div className="mt-10 rounded-[32px] bg-white border border-[#e6ebf2] shadow-[0_30px_80px_rgba(15,23,42,0.12)] px-6 py-8 md:px-10 md:py-10">
+            <div className="mt-10 rounded-[32px] bg-white border border-[#e6ebf2] shadow-[0_30px_80px_rgba(15,23,42,0.12)] px-6 py-8 md:px-10 md:py-10 transition-transform duration-200 hover:-translate-y-1">
               <form
                 className="space-y-6"
                 onSubmit={(event) => {

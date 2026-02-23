@@ -13,21 +13,53 @@ export default function Register() {
     const [confirmPassword, setConfirmPassword] = useState("");
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+    const [errorMessage, setErrorMessage] = useState("");
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const apiBaseUrl = process.env.NEXT_PUBLIC_SERVER_URL ?? "http://localhost:3000";
 
-    const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+    const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
-        sessionStorage.setItem(
-            "km-auth",
-            JSON.stringify({
-                name: fullName || "New Leader",
-                email: email || "newleader@kingdommandate.org",
-                role: "New Member",
-            }),
-        );
-        sessionStorage.setItem("km-onboarding", "true");
-        sessionStorage.setItem("km-preferences", JSON.stringify({ focus: "Leadership", track: "Foundation" }));
-        window.dispatchEvent(new Event("km-session"));
-        router.push("/dashboard");
+        setErrorMessage("");
+        if (!fullName || !email || !password || !confirmPassword) {
+            setErrorMessage("All fields are required.");
+            return;
+        }
+        if (password !== confirmPassword) {
+            setErrorMessage("Passwords do not match.");
+            return;
+        }
+        setIsSubmitting(true);
+        try {
+            const response = await fetch(`${apiBaseUrl}/api/auth/register`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                credentials: "include",
+                body: JSON.stringify({ fullName, email, password }),
+            });
+            const payload = (await response.json()) as {
+                message?: string;
+                token?: string;
+                user?: { name: string; email: string; role: string };
+            };
+            if (!response.ok || !payload.user || !payload.token) {
+                throw new Error(payload.message || "Registration failed.");
+            }
+            sessionStorage.setItem("km-auth", JSON.stringify(payload.user));
+            sessionStorage.setItem("km-token", payload.token);
+            sessionStorage.setItem("km-onboarding", "true");
+            sessionStorage.setItem(
+                "km-preferences",
+                JSON.stringify({ focus: "Leadership", track: "Foundation" }),
+            );
+            window.dispatchEvent(new Event("km-session"));
+            router.push("/dashboard");
+        } catch (error) {
+            const message =
+                error instanceof Error ? error.message : "Registration failed.";
+            setErrorMessage(message);
+        } finally {
+            setIsSubmitting(false);
+        }
     };
 
     return (
@@ -60,6 +92,7 @@ export default function Register() {
                                 className="glass-input w-full h-14 pl-12 pr-4 rounded-lg text-[#0e121b] placeholder:text-[#4f6696] focus:ring-2 focus:ring-(--reg-primary)/50 focus:border-(--reg-primary) outline-none transition-all"
                                 placeholder="Enter your full name"
                                 type="text"
+                                required
                                 value={fullName}
                                 onChange={(event) => setFullName(event.target.value)}
                             />
@@ -78,6 +111,7 @@ export default function Register() {
                                 className="glass-input w-full h-14 pl-12 pr-4 rounded-lg text-[#0e121b] placeholder:text-[#4f6696] focus:ring-2 focus:ring-(--reg-primary)/50 focus:border-(--reg-primary) outline-none transition-all"
                                 placeholder="name@example.com"
                                 type="email"
+                                required
                                 value={email}
                                 onChange={(event) => setEmail(event.target.value)}
                             />
@@ -96,6 +130,7 @@ export default function Register() {
                                 className="glass-input w-full h-14 pl-12 pr-12 rounded-lg text-[#0e121b] placeholder:text-[#4f6696] focus:ring-2 focus:ring-(--reg-primary)/50 focus:border-(--reg-primary) outline-none transition-all"
                                 placeholder="Create a strong password"
                                 type={showPassword ? "text" : "password"}
+                                required
                                 value={password}
                                 onChange={(event) => setPassword(event.target.value)}
                             />
@@ -123,6 +158,7 @@ export default function Register() {
                                 className="glass-input w-full h-14 pl-12 pr-12 rounded-lg text-[#0e121b] placeholder:text-[#4f6696] focus:ring-2 focus:ring-(--reg-primary)/50 focus:border-(--reg-primary) outline-none transition-all"
                                 placeholder="Re-enter your password"
                                 type={showConfirmPassword ? "text" : "password"}
+                                required
                                 value={confirmPassword}
                                 onChange={(event) => setConfirmPassword(event.target.value)}
                             />
@@ -141,12 +177,16 @@ export default function Register() {
                     <button
                         className="glow-button w-full h-14 bg-(--reg-primary) text-white font-bold rounded-lg mt-4 hover:bg-(--reg-primary)/90 transition-all flex items-center justify-center gap-2 group"
                         type="submit"
+                        disabled={isSubmitting}
                     >
-                        Create Account
+                        {isSubmitting ? "Creating..." : "Create Account"}
                         <span className="material-symbols-outlined transition-transform group-hover:translate-x-1">
                             arrow_forward
                         </span>
                     </button>
+                    {errorMessage ? (
+                        <p className="text-xs text-[#ef4444] text-center">{errorMessage}</p>
+                    ) : null}
                 </form>
 
                 {/* Login Redirect */}

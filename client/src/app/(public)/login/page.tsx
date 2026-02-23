@@ -9,22 +9,44 @@ export default function Login() {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [showPassword, setShowPassword] = useState(false);
+    const [errorMessage, setErrorMessage] = useState("");
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const apiBaseUrl = process.env.NEXT_PUBLIC_SERVER_URL ?? "http://localhost:3000";
 
-    const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+    const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
-        const nameFromEmail = email.split("@")[0]?.replace(/[._-]+/g, " ").trim();
-        const name = nameFromEmail ? nameFromEmail.replace(/\b\w/g, (char) => char.toUpperCase()) : "Leader";
-        sessionStorage.setItem(
-            "km-auth",
-            JSON.stringify({
-                name,
-                email: email || "leader@kingdommandate.org",
-                role: "Member",
-            }),
-        );
-        sessionStorage.setItem("km-onboarding", "false");
-        window.dispatchEvent(new Event("km-session"));
-        router.push("/dashboard");
+        setErrorMessage("");
+        if (!email || !password) {
+            setErrorMessage("Email and password are required.");
+            return;
+        }
+        setIsSubmitting(true);
+        try {
+            const response = await fetch(`${apiBaseUrl}/api/auth/login`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                credentials: "include",
+                body: JSON.stringify({ email, password }),
+            });
+            const payload = (await response.json()) as {
+                message?: string;
+                token?: string;
+                user?: { name: string; email: string; role: string };
+            };
+            if (!response.ok || !payload.user || !payload.token) {
+                throw new Error(payload.message || "Invalid credentials.");
+            }
+            sessionStorage.setItem("km-auth", JSON.stringify(payload.user));
+            sessionStorage.setItem("km-token", payload.token);
+            sessionStorage.setItem("km-onboarding", "false");
+            window.dispatchEvent(new Event("km-session"));
+            router.push("/dashboard");
+        } catch (error) {
+            const message = error instanceof Error ? error.message : "Login failed.";
+            setErrorMessage(message);
+        } finally {
+            setIsSubmitting(false);
+        }
     };
 
     return (
@@ -56,6 +78,7 @@ export default function Login() {
                                     className="glass-input w-full h-14 rounded-lg px-4 pr-12 text-[#0e121b] placeholder:text-[#4f6696] focus:ring-2 focus:ring-(--reg-primary)/50 focus:border-(--reg-primary) outline-none transition-all"
                                     placeholder="name@ministry.org"
                                     type="email"
+                                    required
                                     value={email}
                                     onChange={(event) => setEmail(event.target.value)}
                                 />
@@ -82,6 +105,7 @@ export default function Login() {
                                     className="glass-input w-full h-14 rounded-lg px-4 pr-12 text-[#0e121b] placeholder:text-[#4f6696] focus:ring-2 focus:ring-(--reg-primary)/50 focus:border-(--reg-primary) outline-none transition-all"
                                     placeholder="••••••••"
                                     type={showPassword ? "text" : "password"}
+                                    required
                                     value={password}
                                     onChange={(event) => setPassword(event.target.value)}
                                 />
@@ -100,9 +124,13 @@ export default function Login() {
                         <button
                             className="glow-button w-full h-14 bg-(--reg-primary) text-white font-bold rounded-lg mt-4 hover:bg-(--reg-primary)/90 transition-all flex items-center justify-center gap-2 group"
                             type="submit"
+                            disabled={isSubmitting}
                         >
-                            Login to Portal
+                            {isSubmitting ? "Logging in..." : "Login to Portal"}
                         </button>
+                        {errorMessage ? (
+                            <p className="text-xs text-[#ef4444] text-center">{errorMessage}</p>
+                        ) : null}
                     </form>
                     {/* Divider */}
                     <div className="flex items-center gap-4 my-8">

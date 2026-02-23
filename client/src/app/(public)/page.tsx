@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import { useRouter } from "next/navigation";
+import { useState } from "react";
 import { PulseFitHero } from "@/components/ui/pulse-fit-hero";
 import { BouncyCardsFeatures } from "@/components/ui/bouncy-card-features";
 import { CircularTestimonials } from "@/components/ui/circular-testimonials";
@@ -9,6 +10,45 @@ import { GlobeFeatureSection } from "@/components/ui/globe-feature-section";
 
 export default function Home() {
   const router = useRouter();
+
+  const testimonials = [
+    {
+      quote: "The mentorship and teaching here transformed my leadership and daily walk with God.",
+      name: "Faith Johnson",
+      designation: "Community Leader",
+      src: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=800&h=800&fit=crop&crop=face",
+    },
+    {
+      quote: "I found clarity in purpose and practical tools to lead my community with excellence.",
+      name: "Daniel Okafor",
+      designation: "Campus Director",
+      src: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=800&h=800&fit=crop&crop=face",
+    },
+    {
+      quote: "The community is warm, the teachings are deep, and the impact is undeniable.",
+      name: "Grace Mensah",
+      designation: "Prayer Coordinator",
+      src: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=800&h=800&fit=crop&crop=face",
+    },
+    {
+      quote: "Every session strengthens my faith and equips me to serve with confidence.",
+      name: "Samuel Adeyemi",
+      designation: "Youth Pastor",
+      src: "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=800&h=800&fit=crop&crop=face",
+    },
+    {
+      quote: "I feel supported and empowered to fulfill my calling in every sphere.",
+      name: "Ruth Abiola",
+      designation: "Outreach Volunteer",
+      src: "https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=800&h=800&fit=crop&crop=face",
+    },
+    {
+      quote: "Kingdom Mandate has been a steady source of wisdom and encouragement.",
+      name: "Michael Osei",
+      designation: "Ministry Partner",
+      src: "https://images.unsplash.com/photo-1527980965255-d3b416303d12?w=800&h=800&fit=crop&crop=face",
+    },
+  ];
 
   const handleSubmitTestimony = () => {
     const auth = typeof window !== "undefined" ? sessionStorage.getItem("km-auth") : null;
@@ -18,6 +58,40 @@ export default function Home() {
       router.push("/register");
     }
   };
+
+  const [formValues, setFormValues] = useState({
+    firstName: "",
+    lastName: "",
+    email: "",
+    subject: "",
+    message: "",
+  });
+  const [touchedFields, setTouchedFields] = useState<Record<string, boolean>>({});
+  const [submitAttempted, setSubmitAttempted] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitStatus, setSubmitStatus] = useState<"idle" | "success" | "error">(
+    "idle",
+  );
+  const [submitMessage, setSubmitMessage] = useState("");
+  const apiBaseUrl = process.env.NEXT_PUBLIC_SERVER_URL ?? "http://localhost:3000";
+
+  const emailIsValid = (value: string) =>
+    /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+
+  const errors = {
+    firstName: formValues.firstName ? "" : "First name is required.",
+    lastName: formValues.lastName ? "" : "Last name is required.",
+    email: !formValues.email
+      ? "Email is required."
+      : emailIsValid(formValues.email)
+        ? ""
+        : "Enter a valid email address.",
+    subject: formValues.subject ? "" : "Subject is required.",
+    message: formValues.message ? "" : "Message is required.",
+  };
+
+  const showError = (field: keyof typeof errors) =>
+    (submitAttempted || touchedFields[field]) && Boolean(errors[field]);
 
   return (
     <div className="relative flex h-auto min-h-screen w-full flex-col group/design-root overflow-x-hidden font-sans">
@@ -69,63 +143,23 @@ export default function Home() {
         <BouncyCardsFeatures />
 
         <section className="w-full flex flex-col items-center py-20 px-4 bg-white/30 backdrop-blur-sm mt-12 md:mt-24 overflow-hidden">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl sm:text-5xl font-bold mb-4 tracking-tight">Voices of Transformation</h2>
-            <p className="text-xl text-(--text-muted) max-w-2xl mx-auto">
-              Real stories from our global community of believers and leaders.
-            </p>
+          <div className="w-full flex flex-col items-center text-center gap-6">
+            <div className="flex flex-col items-center gap-3">
+              <h2 className="max-w-[720px] text-3xl font-semibold leading-tight sm:text-5xl sm:leading-tight text-[#0e121b]">
+                Voices of Transformation
+              </h2>
+              <p className="text-md max-w-[600px] font-medium text-[#6b7280] sm:text-xl">
+                Real stories from our global community of believers and leaders.
+              </p>
+            </div>
+            <CircularTestimonials
+              testimonials={testimonials}
+              autoplay
+            />
           </div>
-
-          <CircularTestimonials
-            testimonials={[
-              {
-                quote: "The leadership training at Kingdom Mandate transformed my approach to business. I now lead with a sense of purpose and divine stewardship.",
-                name: "Dr. Samuel Okonkwo",
-                designation: "CEO, Kingdom Tech Solutions",
-                src: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=800&h=800&fit=crop&crop=face",
-              },
-              {
-                quote: "I found a community that truly supports my spiritual growth. The sermons are practical and life-changing for my entire family.",
-                name: "Sarah Mitchell",
-                designation: "Global Community Leader",
-                src: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=800&h=800&fit=crop&crop=face",
-              },
-              {
-                quote: "The mentorship program helped me discover my mandate. I am now actively serving in our youth ministry with profound confidence.",
-                name: "Pastor Michael Wright",
-                designation: "Youth Empowerment Mentor",
-                src: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=800&h=800&fit=crop&crop=face",
-              },
-              {
-                quote: "Kingdom Mandate has been a beacon of hope. Their commitment to spiritual integrity and global service is truly unmatched in this generation.",
-                name: "Emma Thompson",
-                designation: "International Ministry Partner",
-                src: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=800&h=800&fit=crop&crop=face",
-              },
-            ]}
-            autoplay={true}
-            colors={{
-              name: "#0044CC",
-              designation: "#4a5568",
-              testimony: "#1a202c",
-              arrowBackground: "#0044CC",
-              arrowForeground: "#ffffff",
-              arrowHoverBackground: "#0033aa",
-              actionButtonBackground: "#ffffff",
-              actionButtonForeground: "#0044CC",
-            }}
-            fontSizes={{
-              name: "28px",
-              designation: "18px",
-              quote: "20px",
-            }}
-            actionButton={{
-              label: "Submit Testimonies",
-              onClick: handleSubmitTestimony,
-            }}
-          />
         </section>
         <GlobeFeatureSection />
+       
       </main>
     </div>
   );

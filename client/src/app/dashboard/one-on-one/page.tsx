@@ -3,54 +3,71 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState, useSyncExternalStore } from "react";
-
-const calendarDays = [
-  null,
-  null,
-  null,
-  null,
-  1,
-  2,
-  3,
-  4,
-  5,
-  6,
-  7,
-  8,
-  9,
-  10,
-  11,
-  12,
-  13,
-  14,
-  15,
-  16,
-  17,
-  18,
-  19,
-  20,
-  21,
-  22,
-  23,
-  24,
-  25,
-  26,
-  27,
-  28,
-  29,
-  30,
-];
-
-const timeSlots = ["09:00 AM", "11:30 AM", "02:00 PM", "04:30 PM"];
+import DashboardHeader from "@/components/dashboard/dashboard-header";
+import DashboardSidebar from "@/components/dashboard/dashboard-sidebar";
 
 export default function OneOnOneBookingPage() {
   const router = useRouter();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [selectedDay, setSelectedDay] = useState<number | null>(4);
-  const [selectedTime, setSelectedTime] = useState("11:30 AM");
-  const availableDays = new Set(
-    calendarDays.filter((day): day is number => Boolean(day)),
+  const [isAuthReady, setIsAuthReady] = useState(false);
+  const [formValues, setFormValues] = useState({
+    title: "",
+    firstName: "",
+    middleName: "",
+    lastName: "",
+    gender: "",
+    maritalStatus: "",
+    email: "",
+    phone: "",
+  });
+  const [touchedFields, setTouchedFields] = useState<Record<string, boolean>>({});
+  const [submitAttempted, setSubmitAttempted] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitStatus, setSubmitStatus] = useState<"idle" | "success" | "error">(
+    "idle",
   );
+  const [submitMessage, setSubmitMessage] = useState("");
+  const apiBaseUrl = process.env.NEXT_PUBLIC_SERVER_URL ?? "http://localhost:3000";
+
+  const emailIsValid = (value: string) =>
+    /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+
+  const formatPhoneInput = (value: string) => {
+    const digits = value.replace(/\D/g, "");
+    if (digits.length <= 3) {
+      return digits;
+    }
+    if (digits.length <= 6) {
+      return `(${digits.slice(0, 3)}) ${digits.slice(3)}`;
+    }
+    if (digits.length <= 10) {
+      return `(${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(6)}`;
+    }
+    return `+${digits.slice(0, 15)}`;
+  };
+
+  const phoneDigits = formValues.phone.replace(/\D/g, "");
+  const errors = {
+    title: formValues.title ? "" : "Select a title.",
+    firstName: formValues.firstName ? "" : "First name is required.",
+    middleName: formValues.middleName ? "" : "Middle name is required.",
+    lastName: formValues.lastName ? "" : "Last name is required.",
+    gender: formValues.gender ? "" : "Select a gender.",
+    maritalStatus: formValues.maritalStatus ? "" : "Select a marital status.",
+    email: !formValues.email
+      ? "Email is required."
+      : emailIsValid(formValues.email)
+        ? ""
+        : "Enter a valid email address.",
+    phone: !formValues.phone
+      ? "Phone number is required."
+      : phoneDigits.length < 10
+        ? "Enter a valid phone number."
+        : "",
+  };
+
+  const showError = (field: keyof typeof errors) =>
+    (submitAttempted || touchedFields[field]) && Boolean(errors[field]);
 
   const subscribe = (callback: () => void) => {
     if (typeof window === "undefined") {
@@ -71,6 +88,12 @@ export default function OneOnOneBookingPage() {
     () => null,
   );
 
+  const rawToken = useSyncExternalStore(
+    subscribe,
+    () => sessionStorage.getItem("km-token"),
+    () => null,
+  );
+
   const onboardingFlag = useSyncExternalStore(
     subscribe,
     () => sessionStorage.getItem("km-onboarding"),
@@ -78,12 +101,61 @@ export default function OneOnOneBookingPage() {
   );
 
   useEffect(() => {
-    if (!rawUser) {
+    if (!rawUser || !rawToken) {
       router.replace("/login");
     }
-  }, [rawUser, router]);
+  }, [rawUser, rawToken, router]);
 
-  if (!rawUser) {
+  useEffect(() => {
+    let isActive = true;
+    const verify = async () => {
+      if (!rawUser || !rawToken) {
+        return;
+      }
+      try {
+        const response = await fetch(`${apiBaseUrl}/api/auth/me`, {
+          headers: { Authorization: `Bearer ${rawToken}` },
+        });
+        if (!response.ok) {
+          if (response.status === 401) {
+            const refreshResponse = await fetch(`${apiBaseUrl}/api/auth/refresh`, {
+              method: "POST",
+              credentials: "include",
+            });
+            const refreshPayload = (await refreshResponse.json()) as { token?: string };
+            if (!refreshResponse.ok || !refreshPayload.token) {
+              throw new Error("Unauthorized");
+            }
+            sessionStorage.setItem("km-token", refreshPayload.token);
+            const retry = await fetch(`${apiBaseUrl}/api/auth/me`, {
+              headers: { Authorization: `Bearer ${refreshPayload.token}` },
+            });
+            if (!retry.ok) {
+              throw new Error("Unauthorized");
+            }
+          } else {
+            throw new Error("Unauthorized");
+          }
+        }
+        if (isActive) {
+          setIsAuthReady(true);
+        }
+      } catch (error) {
+        sessionStorage.removeItem("km-auth");
+        sessionStorage.removeItem("km-token");
+        sessionStorage.removeItem("km-onboarding");
+        sessionStorage.removeItem("km-preferences");
+        window.dispatchEvent(new Event("km-session"));
+        router.replace("/login");
+      }
+    };
+    verify();
+    return () => {
+      isActive = false;
+    };
+  }, [apiBaseUrl, rawToken, rawUser, router]);
+
+  if (!rawUser || !isAuthReady) {
     return <div className="min-h-screen bg-[#f4f7fb]" />;
   }
 
@@ -98,6 +170,17 @@ export default function OneOnOneBookingPage() {
     userName = "Leader";
     userRole = "Member";
   }
+
+  const handleLogout = () => {
+    setIsSidebarOpen(false);
+    fetch(`${apiBaseUrl}/api/auth/logout`, { method: "POST", credentials: "include" });
+    sessionStorage.removeItem("km-auth");
+    sessionStorage.removeItem("km-token");
+    sessionStorage.removeItem("km-onboarding");
+    sessionStorage.removeItem("km-preferences");
+    window.dispatchEvent(new Event("km-session"));
+    router.push("/login");
+  };
 
   if (onboardingFlag === "true") {
     return (
@@ -164,253 +247,19 @@ export default function OneOnOneBookingPage() {
 
   return (
     <div className="min-h-screen flex bg-[#f4f7fb] text-[#0e121b]">
-      <div
-        className={`fixed inset-0 z-40 bg-black/40 transition-opacity lg:hidden ${
-          isSidebarOpen ? "opacity-100" : "pointer-events-none opacity-0"
-        }`}
-        onClick={() => setIsSidebarOpen(false)}
+      <DashboardSidebar
+        isOpen={isSidebarOpen}
+        onClose={() => setIsSidebarOpen(false)}
+        onLogout={handleLogout}
       />
-      <aside
-        className={`fixed inset-y-0 left-0 z-50 w-[280px] flex-col border-r border-[#e8ebf3] bg-white shadow-xl transition-transform lg:hidden ${
-          isSidebarOpen ? "translate-x-0" : "-translate-x-full"
-        }`}
-      >
-        <div className="flex items-center justify-between px-6 py-6">
-          <Link
-            href="/"
-            className="flex items-center gap-3"
-            onClick={() => setIsSidebarOpen(false)}
-          >
-            <div className="size-10 rounded-xl bg-[#2f5be7] text-white flex items-center justify-center">
-              <span className="material-symbols-outlined text-xl">dashboard</span>
-            </div>
-            <div>
-              <p className="text-base font-bold">Kingdom Mandate</p>
-              <p className="text-xs font-semibold text-[#2f5be7] uppercase tracking-widest">
-                Leadership Hub
-              </p>
-            </div>
-          </Link>
-          <button
-            className="size-10 rounded-full border border-[#e8ebf3] text-[#5b6b83] flex items-center justify-center"
-            onClick={() => setIsSidebarOpen(false)}
-          >
-            <span className="material-symbols-outlined text-base">close</span>
-          </button>
-        </div>
-        <nav className="flex flex-col gap-1 px-4">
-          <Link
-            href="/dashboard/calendar"
-            className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold text-[#5b6b83] hover:bg-[#f1f4ff]"
-            onClick={() => setIsSidebarOpen(false)}
-          >
-            <span className="material-symbols-outlined text-lg">home</span>
-            Home
-          </Link>
-          <Link
-            href="/dashboard/courses"
-            className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold text-[#5b6b83] hover:bg-[#f1f4ff]"
-            onClick={() => setIsSidebarOpen(false)}
-          >
-            <span className="material-symbols-outlined text-lg">menu_book</span>
-            Courses / Library
-          </Link>
-          <Link
-            href="/dashboard/prayer-requests"
-            className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold text-[#5b6b83] hover:bg-[#f1f4ff]"
-            onClick={() => setIsSidebarOpen(false)}
-          >
-            <span className="material-symbols-outlined text-lg">calendar_month</span>
-            Calendar/Events
-          </Link>
-          <Link
-            href="/dashboard/prayer-requests"
-            className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold text-[#5b6b83] hover:bg-[#f1f4ff]"
-            onClick={() => setIsSidebarOpen(false)}
-          >
-            <span className="material-symbols-outlined text-lg">volunteer_activism</span>
-            Prayer Requests
-          </Link>
-          <Link
-            href="/dashboard/one-on-one"
-            className="flex items-center gap-3 rounded-xl bg-[#2f5be7] text-white px-4 py-3 text-sm font-semibold"
-            onClick={() => setIsSidebarOpen(false)}
-          >
-            <span className="material-symbols-outlined text-lg">schedule</span>
-            One-on-One Booking
-          </Link>
-          <Link
-            href="/dashboard/testimonies"
-            className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold text-[#5b6b83] hover:bg-[#f1f4ff]"
-            onClick={() => setIsSidebarOpen(false)}
-          >
-            <span className="material-symbols-outlined text-lg">auto_stories</span>
-            Testimonies
-          </Link>
-          <Link
-            href="/dashboard/sermons"
-            className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold text-[#5b6b83] hover:bg-[#f1f4ff]"
-            onClick={() => setIsSidebarOpen(false)}
-          >
-            <span className="material-symbols-outlined text-lg">mic</span>
-            Sermons
-          </Link>
-        </nav>
-        <div className="mt-auto px-4 pb-6">
-          <div className="border-t border-[#e8ebf3] pt-5">
-            <Link
-              href="/dashboard/profile"
-              className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold text-[#5b6b83] hover:bg-[#f1f4ff]"
-              onClick={() => setIsSidebarOpen(false)}
-            >
-              <span className="material-symbols-outlined text-lg">settings</span>
-              Settings
-            </Link>
-            <button
-              className="mt-4 w-full rounded-xl border border-[#e8ebf3] px-4 py-3 text-sm font-semibold text-[#1f2a44] hover:bg-[#f7f9fc]"
-              onClick={() => {
-                setIsSidebarOpen(false);
-                sessionStorage.removeItem("km-auth");
-                sessionStorage.removeItem("km-onboarding");
-                sessionStorage.removeItem("km-preferences");
-                window.dispatchEvent(new Event("km-session"));
-                router.push("/login");
-              }}
-            >
-              Log Out
-            </button>
-          </div>
-        </div>
-      </aside>
-      <aside className="hidden lg:flex w-[280px] flex-col border-r border-[#e8ebf3] bg-white">
-        <Link href="/" className="flex items-center gap-3 px-6 py-6">
-          <div className="size-10 rounded-xl bg-[#2f5be7] text-white flex items-center justify-center">
-            <span className="material-symbols-outlined text-xl">dashboard</span>
-          </div>
-          <div>
-            <p className="text-base font-bold">Kingdom Mandate</p>
-            <p className="text-xs font-semibold text-[#2f5be7] uppercase tracking-widest">
-              Leadership Hub
-            </p>
-          </div>
-        </Link>
-        <nav className="flex flex-col gap-1 px-4">
-          <Link
-            href="/dashboard"
-            className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold text-[#5b6b83] hover:bg-[#f1f4ff]"
-          >
-            <span className="material-symbols-outlined text-lg">home</span>
-            Home
-          </Link>
-          <Link
-            href="/dashboard/courses"
-            className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold text-[#5b6b83] hover:bg-[#f1f4ff]"
-          >
-            <span className="material-symbols-outlined text-lg">menu_book</span>
-            Courses / Library
-          </Link>
-          <Link
-            href="/dashboard/calendar"
-            className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold text-[#5b6b83] hover:bg-[#f1f4ff]"
-          >
-            <span className="material-symbols-outlined text-lg">calendar_month</span>
-            Calendar/Events
-          </Link>
-          <Link
-            href="/dashboard/prayer-requests"
-            className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold text-[#5b6b83] hover:bg-[#f1f4ff]"
-          >
-            <span className="material-symbols-outlined text-lg">volunteer_activism</span>
-            Prayer Requests
-          </Link>
-          <Link
-            href="/dashboard/one-on-one"
-            className="flex items-center gap-3 rounded-xl bg-[#2f5be7] text-white px-4 py-3 text-sm font-semibold"
-          >
-            <span className="material-symbols-outlined text-lg">schedule</span>
-            One-on-One Booking
-          </Link>
-          <Link
-            href="/dashboard/testimonies"
-            className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold text-[#5b6b83] hover:bg-[#f1f4ff]"
-          >
-            <span className="material-symbols-outlined text-lg">auto_stories</span>
-            Testimonies
-          </Link>
-          <Link
-            href="/dashboard/sermons"
-            className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold text-[#5b6b83] hover:bg-[#f1f4ff]"
-          >
-            <span className="material-symbols-outlined text-lg">mic</span>
-            Sermons
-          </Link>
-        </nav>
-        <div className="mt-auto px-4 pb-6">
-          <div className="border-t border-[#e8ebf3] pt-5">
-            <Link
-              href="/dashboard/profile"
-              className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold text-[#5b6b83] hover:bg-[#f1f4ff]"
-            >
-              <span className="material-symbols-outlined text-lg">settings</span>
-              Settings
-            </Link>
-            <button
-              className="mt-4 w-full rounded-xl border border-[#e8ebf3] px-4 py-3 text-sm font-semibold text-[#1f2a44] hover:bg-[#f7f9fc]"
-              onClick={() => {
-                sessionStorage.removeItem("km-auth");
-                sessionStorage.removeItem("km-onboarding");
-                sessionStorage.removeItem("km-preferences");
-                window.dispatchEvent(new Event("km-session"));
-                router.push("/login");
-              }}
-            >
-              Log Out
-            </button>
-          </div>
-        </div>
-      </aside>
-      <div className="flex-1 flex flex-col">
-        <header className="flex flex-col gap-4 border-b border-[#e8ebf3] bg-white px-4 py-4 md:px-6 md:flex-row md:items-center md:justify-between md:gap-6">
-          <div className="flex items-center gap-3 w-full md:max-w-2xl">
-            <button
-              className="size-10 rounded-xl bg-[#2f5be7] text-white flex items-center justify-center lg:hidden"
-              onClick={() => setIsSidebarOpen(true)}
-            >
-              <span className="material-symbols-outlined">menu</span>
-            </button>
-            <div className="flex items-center gap-3 w-full rounded-full border border-[#e8ebf3] bg-[#f7f9fc] px-4 py-2 focus-within:border-[#2f5be7] focus-within:ring-2 focus-within:ring-[#2f5be7]/20">
-              <span className="material-symbols-outlined text-[#8fa1b6] text-base">
-                search
-              </span>
-              <input
-                className="w-full bg-transparent text-sm text-[#1f2a44] outline-none"
-                placeholder="Search mentors, topics, or sessions..."
-                type="text"
-              />
-            </div>
-          </div>
-          <div className="flex items-center gap-3 md:gap-4">
-            <button className="size-10 rounded-full border border-[#e8ebf3] text-[#5b6b83] flex items-center justify-center">
-              <span className="material-symbols-outlined text-base">notifications</span>
-            </button>
-            <button className="size-10 rounded-full border border-[#e8ebf3] text-[#5b6b83] flex items-center justify-center">
-              <span className="material-symbols-outlined text-base">chat_bubble</span>
-            </button>
-            <Link
-              href="/dashboard/profile"
-              className="hidden md:flex items-center gap-3 border-l border-[#e8ebf3] pl-4"
-            >
-              <div className="text-right">
-                <p className="text-sm font-bold text-[#1f2a44]">{userName}</p>
-                <p className="text-xs text-[#5b6b83]">{userRole}</p>
-              </div>
-              <div className="size-10 rounded-full bg-[#2f5be7] text-white flex items-center justify-center">
-                <span className="material-symbols-outlined">person</span>
-              </div>
-            </Link>
-          </div>
-        </header>
-        <main className="flex-1 px-4 py-6 md:px-6 lg:px-10 lg:py-10">
+      <div className="flex-1 flex flex-col lg:pl-[280px]">
+        <DashboardHeader
+          onOpenSidebar={() => setIsSidebarOpen(true)}
+          searchPlaceholder="Search mentors, topics, or sessions..."
+          userName={userName}
+          userRole={userRole}
+        />
+        <main className="flex-1 px-4 pb-5 pt-24 md:px-6 md:pb-6 lg:px-10 lg:pb-8">
           <section className="mx-auto w-full max-w-5xl">
             <div className="rounded-[32px] border border-[#e6ebf2] bg-white shadow-[0_30px_80px_rgba(15,23,42,0.12)] overflow-hidden transition-transform duration-200 hover:-translate-y-1">
               <div className="flex flex-col gap-2 border-b border-[#e9eef7] bg-[#f8faff] px-6 py-6 md:px-10">
@@ -426,17 +275,261 @@ export default function OneOnOneBookingPage() {
                   Connect with our spiritual leaders for personalized growth and divine guidance.
                 </p>
               </div>
-              <div className="grid grid-cols-1 lg:grid-cols-[1.2fr_1fr]">
-                <div className="px-6 py-6 md:px-10 md:py-8 space-y-5">
-                  <div className="space-y-2">
-                    <label className="text-xs font-semibold tracking-[0.2em] text-[#64748b] uppercase">
-                      Full name
-                    </label>
-                    <input
-                      className="h-12 w-full rounded-xl border border-[#e5e7f2] bg-white px-4 text-sm text-[#111827] placeholder:text-[#9aa4b2] focus:border-[#2f5be7] focus:outline-none focus:ring-2 focus:ring-[#2f5be7]/20"
-                      placeholder="John Doe"
-                      type="text"
-                    />
+              <form
+                className="px-6 py-6 md:px-10 md:py-8 space-y-5"
+                onSubmit={async (event) => {
+                  event.preventDefault();
+                  setSubmitAttempted(true);
+                  setSubmitStatus("idle");
+                  setSubmitMessage("");
+                  if (Object.values(errors).some(Boolean)) {
+                    return;
+                  }
+                  setIsSubmitting(true);
+                  try {
+                    const response = await fetch(`${apiBaseUrl}/api/one-to-one`, {
+                      method: "POST",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify({
+                        title: formValues.title,
+                        firstName: formValues.firstName,
+                        middleName: formValues.middleName,
+                        surname: formValues.lastName,
+                        gender: formValues.gender,
+                        maritalStatus: formValues.maritalStatus,
+                        email: formValues.email,
+                        phone: formValues.phone,
+                      }),
+                    });
+                    const payload = (await response.json()) as {
+                      message?: string;
+                    };
+                    if (!response.ok) {
+                      throw new Error(
+                        payload.message || "Failed to submit one-on-one request.",
+                      );
+                    }
+                    setSubmitStatus("success");
+                    setSubmitMessage(
+                      payload.message || "Session request submitted successfully.",
+                    );
+                    setFormValues({
+                      title: "",
+                      firstName: "",
+                      middleName: "",
+                      lastName: "",
+                      gender: "",
+                      maritalStatus: "",
+                      email: "",
+                      phone: "",
+                    });
+                    setTouchedFields({});
+                    setSubmitAttempted(false);
+                  } catch (error) {
+                    const message =
+                      error instanceof Error
+                        ? error.message
+                        : "Failed to submit one-on-one request.";
+                    setSubmitStatus("error");
+                    setSubmitMessage(message);
+                  } finally {
+                    setIsSubmitting(false);
+                  }
+                }}
+              >
+                <div className="grid gap-4 md:grid-cols-3">
+                    <div className="space-y-2">
+                      <label className="text-xs font-semibold tracking-[0.2em] text-[#64748b] uppercase">
+                        Title
+                      </label>
+                      <div className="relative">
+                        <select
+                          className="h-12 w-full appearance-none rounded-xl border border-[#e5e7f2] bg-white px-4 pr-10 text-sm text-[#111827] focus:border-[#2f5be7] focus:outline-none focus:ring-2 focus:ring-[#2f5be7]/20"
+                          required
+                          value={formValues.title}
+                          onChange={(event) =>
+                            setFormValues((prev) => ({
+                              ...prev,
+                              title: event.target.value,
+                            }))
+                          }
+                          onBlur={() =>
+                            setTouchedFields((prev) => ({ ...prev, title: true }))
+                          }
+                        >
+                          <option value="">Select title</option>
+                          <option value="mr">Mr</option>
+                          <option value="mrs">Mrs</option>
+                          <option value="miss">Miss</option>
+                        </select>
+                        <span className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-[#94a3b8] material-symbols-outlined text-base">
+                          expand_more
+                        </span>
+                      </div>
+                      {showError("title") ? (
+                        <p className="text-[11px] text-[#ef4444]">{errors.title}</p>
+                      ) : null}
+                    </div>
+                    <div className="space-y-2 md:col-span-2">
+                      <label className="text-xs font-semibold tracking-[0.2em] text-[#64748b] uppercase">
+                        First name
+                      </label>
+                      <input
+                        className="h-12 w-full rounded-xl border border-[#e5e7f2] bg-white px-4 text-sm text-[#111827] placeholder:text-[#9aa4b2] focus:border-[#2f5be7] focus:outline-none focus:ring-2 focus:ring-[#2f5be7]/20"
+                        placeholder="John"
+                        type="text"
+                        required
+                        value={formValues.firstName}
+                        onChange={(event) =>
+                          setFormValues((prev) => ({
+                            ...prev,
+                            firstName: event.target.value,
+                          }))
+                        }
+                        onBlur={() =>
+                          setTouchedFields((prev) => ({
+                            ...prev,
+                            firstName: true,
+                          }))
+                        }
+                      />
+                      {showError("firstName") ? (
+                        <p className="text-[11px] text-[#ef4444]">
+                          {errors.firstName}
+                        </p>
+                      ) : null}
+                    </div>
+                  </div>
+                <div className="grid gap-4 md:grid-cols-2">
+                    <div className="space-y-2">
+                      <label className="text-xs font-semibold tracking-[0.2em] text-[#64748b] uppercase">
+                        Middle name
+                      </label>
+                      <input
+                        className="h-12 w-full rounded-xl border border-[#e5e7f2] bg-white px-4 text-sm text-[#111827] placeholder:text-[#9aa4b2] focus:border-[#2f5be7] focus:outline-none focus:ring-2 focus:ring-[#2f5be7]/20"
+                        placeholder="Michael"
+                        type="text"
+                        required
+                        value={formValues.middleName}
+                        onChange={(event) =>
+                          setFormValues((prev) => ({
+                            ...prev,
+                            middleName: event.target.value,
+                          }))
+                        }
+                        onBlur={() =>
+                          setTouchedFields((prev) => ({
+                            ...prev,
+                            middleName: true,
+                          }))
+                        }
+                      />
+                      {showError("middleName") ? (
+                        <p className="text-[11px] text-[#ef4444]">
+                          {errors.middleName}
+                        </p>
+                      ) : null}
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-xs font-semibold tracking-[0.2em] text-[#64748b] uppercase">
+                        Last name
+                      </label>
+                      <input
+                        className="h-12 w-full rounded-xl border border-[#e5e7f2] bg-white px-4 text-sm text-[#111827] placeholder:text-[#9aa4b2] focus:border-[#2f5be7] focus:outline-none focus:ring-2 focus:ring-[#2f5be7]/20"
+                        placeholder="Doe"
+                        type="text"
+                        required
+                        value={formValues.lastName}
+                        onChange={(event) =>
+                          setFormValues((prev) => ({
+                            ...prev,
+                            lastName: event.target.value,
+                          }))
+                        }
+                        onBlur={() =>
+                          setTouchedFields((prev) => ({
+                            ...prev,
+                            lastName: true,
+                          }))
+                        }
+                      />
+                      {showError("lastName") ? (
+                        <p className="text-[11px] text-[#ef4444]">
+                          {errors.lastName}
+                        </p>
+                      ) : null}
+                    </div>
+                  </div>
+                <div className="grid gap-4 md:grid-cols-2">
+                    <div className="space-y-2">
+                      <label className="text-xs font-semibold tracking-[0.2em] text-[#64748b] uppercase">
+                        Gender
+                      </label>
+                      <div className="relative">
+                        <select
+                          className="h-12 w-full appearance-none rounded-xl border border-[#e5e7f2] bg-white px-4 pr-10 text-sm text-[#111827] focus:border-[#2f5be7] focus:outline-none focus:ring-2 focus:ring-[#2f5be7]/20"
+                          required
+                          value={formValues.gender}
+                          onChange={(event) =>
+                            setFormValues((prev) => ({
+                              ...prev,
+                              gender: event.target.value,
+                            }))
+                          }
+                          onBlur={() =>
+                            setTouchedFields((prev) => ({ ...prev, gender: true }))
+                          }
+                        >
+                          <option value="">Select gender</option>
+                          <option value="male">Male</option>
+                          <option value="female">Female</option>
+                        </select>
+                        <span className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-[#94a3b8] material-symbols-outlined text-base">
+                          expand_more
+                        </span>
+                      </div>
+                      {showError("gender") ? (
+                        <p className="text-[11px] text-[#ef4444]">{errors.gender}</p>
+                      ) : null}
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-xs font-semibold tracking-[0.2em] text-[#64748b] uppercase">
+                        Marital status
+                      </label>
+                      <div className="relative">
+                        <select
+                          className="h-12 w-full appearance-none rounded-xl border border-[#e5e7f2] bg-white px-4 pr-10 text-sm text-[#111827] focus:border-[#2f5be7] focus:outline-none focus:ring-2 focus:ring-[#2f5be7]/20"
+                          required
+                          value={formValues.maritalStatus}
+                          onChange={(event) =>
+                            setFormValues((prev) => ({
+                              ...prev,
+                              maritalStatus: event.target.value,
+                            }))
+                          }
+                          onBlur={() =>
+                            setTouchedFields((prev) => ({
+                              ...prev,
+                              maritalStatus: true,
+                            }))
+                          }
+                        >
+                          <option value="">Select status</option>
+                          <option value="married">Married</option>
+                          <option value="single">Single</option>
+                          <option value="divorced">Divorced</option>
+                          <option value="widowed">Widowed</option>
+                        </select>
+                        <span className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-[#94a3b8] material-symbols-outlined text-base">
+                          expand_more
+                        </span>
+                      </div>
+                      {showError("maritalStatus") ? (
+                        <p className="text-[11px] text-[#ef4444]">
+                          {errors.maritalStatus}
+                        </p>
+                      ) : null}
+                    </div>
                   </div>
                   <div className="grid gap-4 md:grid-cols-2">
                     <div className="space-y-2">
@@ -447,7 +540,21 @@ export default function OneOnOneBookingPage() {
                         className="h-12 w-full rounded-xl border border-[#e5e7f2] bg-white px-4 text-sm text-[#111827] placeholder:text-[#9aa4b2] focus:border-[#2f5be7] focus:outline-none focus:ring-2 focus:ring-[#2f5be7]/20"
                         placeholder="john@example.com"
                         type="email"
+                        required
+                        value={formValues.email}
+                        onChange={(event) =>
+                          setFormValues((prev) => ({
+                            ...prev,
+                            email: event.target.value,
+                          }))
+                        }
+                        onBlur={() =>
+                          setTouchedFields((prev) => ({ ...prev, email: true }))
+                        }
                       />
+                      {showError("email") ? (
+                        <p className="text-[11px] text-[#ef4444]">{errors.email}</p>
+                      ) : null}
                     </div>
                     <div className="space-y-2">
                       <label className="text-xs font-semibold tracking-[0.2em] text-[#64748b] uppercase">
@@ -457,122 +564,58 @@ export default function OneOnOneBookingPage() {
                         className="h-12 w-full rounded-xl border border-[#e5e7f2] bg-white px-4 text-sm text-[#111827] placeholder:text-[#9aa4b2] focus:border-[#2f5be7] focus:outline-none focus:ring-2 focus:ring-[#2f5be7]/20"
                         placeholder="+1 (555) 000-0000"
                         type="tel"
+                        required
+                        value={formValues.phone}
+                        onChange={(event) =>
+                          setFormValues((prev) => ({
+                            ...prev,
+                            phone: formatPhoneInput(event.target.value),
+                          }))
+                        }
+                        onBlur={() =>
+                          setTouchedFields((prev) => ({ ...prev, phone: true }))
+                        }
                       />
+                      {showError("phone") ? (
+                        <p className="text-[11px] text-[#ef4444]">{errors.phone}</p>
+                      ) : null}
                     </div>
                   </div>
-                  <div className="space-y-2">
-                    <label className="text-xs font-semibold tracking-[0.2em] text-[#64748b] uppercase">
-                      Topic of discussion
-                    </label>
-                    <div className="relative">
-                      <select className="h-12 w-full appearance-none rounded-xl border border-[#e5e7f2] bg-white px-4 pr-10 text-sm text-[#111827] focus:border-[#2f5be7] focus:outline-none focus:ring-2 focus:ring-[#2f5be7]/20">
-                        <option>Spiritual Growth & Disciplines</option>
-                        <option>Leadership & Ministry Strategy</option>
-                        <option>Prayer & Intercession</option>
-                        <option>Marketplace Influence</option>
-                      </select>
-                      <span className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-[#94a3b8] material-symbols-outlined text-base">
-                        expand_more
-                      </span>
+                <div className="rounded-2xl border border-[#e6ecf7] bg-[#f1f5ff] p-4 transition-transform duration-200 hover:-translate-y-1">
+                  <div className="flex items-start gap-3">
+                    <div className="size-9 rounded-full bg-[#2f5be7]/10 text-[#2f5be7] flex items-center justify-center">
+                      <span className="material-symbols-outlined text-base">info</span>
                     </div>
-                  </div>
-                  <div className="rounded-2xl border border-[#e6ecf7] bg-[#f1f5ff] p-4 transition-transform duration-200 hover:-translate-y-1">
-                    <div className="flex items-start gap-3">
-                      <div className="size-9 rounded-full bg-[#2f5be7]/10 text-[#2f5be7] flex items-center justify-center">
-                        <span className="material-symbols-outlined text-base">info</span>
-                      </div>
-                      <div>
-                        <p className="text-sm font-semibold text-[#1f2a44]">
-                          Sessions are conducted via video call or in-person at our hub.
-                        </p>
-                        <p className="mt-1 text-xs text-[#6b7280]">
-                          You will receive a confirmation link after booking.
-                        </p>
-                      </div>
+                    <div>
+                      <p className="text-sm font-semibold text-[#1f2a44]">
+                        Sessions are conducted via video call or in-person at our hub.
+                      </p>
+                      <p className="mt-1 text-xs text-[#6b7280]">
+                        You will receive a confirmation link after booking.
+                      </p>
                     </div>
                   </div>
                 </div>
-                <div className="border-t border-[#e9eef7] lg:border-t-0 lg:border-l px-6 py-6 md:px-8 md:py-8 space-y-5">
-                  <div className="flex items-center justify-between">
-                    <p className="text-xs font-semibold tracking-[0.2em] text-[#64748b] uppercase">
-                      Select date & time
-                    </p>
-                    <div className="flex items-center gap-2">
-                      <button className="size-8 rounded-full border border-[#e5e7f2] text-[#94a3b8] flex items-center justify-center">
-                        <span className="material-symbols-outlined text-base">chevron_left</span>
-                      </button>
-                      <button className="size-8 rounded-full border border-[#e5e7f2] text-[#94a3b8] flex items-center justify-center">
-                        <span className="material-symbols-outlined text-base">chevron_right</span>
-                      </button>
-                    </div>
-                  </div>
-                  <div className="rounded-2xl border border-[#e5e7f2] bg-white p-4 transition-transform duration-200 hover:-translate-y-1">
-                    <div className="text-center text-sm font-semibold text-[#111827]">
-                      October 2024
-                    </div>
-                    <div className="mt-4 grid grid-cols-7 gap-2 text-[11px] font-semibold text-[#9aa4b2]">
-                      {["S", "M", "T", "W", "T", "F", "S"].map((label, index) => (
-                        <div className="text-center" key={`${label}-${index}`}>
-                          {label}
-                        </div>
-                      ))}
-                    </div>
-                    <div className="mt-2 grid grid-cols-7 gap-2 text-xs">
-                      {calendarDays.map((day, index) => {
-                        const isSelected = day === selectedDay;
-                        const isDisabled = !day || !availableDays.has(day);
-                        return (
-                          <button
-                            className={`h-8 rounded-lg text-xs font-semibold ${
-                              isSelected
-                                ? "bg-[#2f5be7] text-white"
-                                : isDisabled
-                                  ? "text-[#cbd5e1]"
-                                  : "text-[#64748b] hover:bg-[#eef3ff]"
-                            }`}
-                            disabled={isDisabled}
-                            key={`${day ?? "empty"}-${index}`}
-                            type="button"
-                            onClick={() => setSelectedDay(day)}
-                          >
-                            {day ?? ""}
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </div>
-                  <div className="grid grid-cols-2 gap-3">
-                    {timeSlots.map((slot) => {
-                      const isSelected = slot === selectedTime;
-                      return (
-                        <button
-                          className={`h-11 rounded-xl border text-sm font-semibold ${
-                            isSelected
-                              ? "border-[#2f5be7] bg-[#eaf1ff] text-[#2f5be7]"
-                              : "border-[#e5e7f2] text-[#1f2a44] hover:bg-[#f7f9fc]"
-                          }`}
-                          key={slot}
-                          type="button"
-                          onClick={() => setSelectedTime(slot)}
-                        >
-                          {slot}
-                        </button>
-                      );
-                    })}
-                  </div>
-                  <button
-                    className="w-full rounded-2xl bg-[#2f5be7] px-6 py-4 text-sm font-semibold text-white shadow-[0_14px_24px_rgba(46,91,231,0.24)] hover:brightness-110 flex items-center justify-center gap-2"
-                    type="button"
+                <button
+                  className="w-full rounded-2xl bg-[#2f5be7] px-6 py-4 text-sm font-semibold text-white shadow-[0_14px_24px_rgba(46,91,231,0.24)] hover:brightness-110 flex items-center justify-center gap-2 disabled:opacity-70"
+                  type="submit"
+                  disabled={isSubmitting}
+                >
+                  {isSubmitting ? "Submitting..." : "Confirm Booking"}
+                  <span className="material-symbols-outlined text-lg">arrow_forward</span>
+                </button>
+                {submitStatus !== "idle" ? (
+                  <p
+                    className={`text-center text-xs ${
+                      submitStatus === "success"
+                        ? "text-[#16a34a]"
+                        : "text-[#ef4444]"
+                    }`}
                   >
-                    Confirm Booking
-                    <span className="material-symbols-outlined text-lg">arrow_forward</span>
-                  </button>
-                  <div className="flex items-center justify-center gap-2 text-xs text-[#9aa4b2]">
-                    <span className="size-1.5 rounded-full bg-[#2f5be7]" />
-                    Available for immediate scheduling
-                  </div>
-                </div>
-              </div>
+                    {submitMessage}
+                  </p>
+                ) : null}
+              </form>
             </div>
             <div className="mt-6 text-center text-xs text-[#8b95a7]">
               Need help?{" "}

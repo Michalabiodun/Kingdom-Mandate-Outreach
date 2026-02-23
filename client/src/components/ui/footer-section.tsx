@@ -1,17 +1,16 @@
 "use client"
 
 import * as React from "react"
+import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Switch } from "@/components/ui/switch"
 import {
     Tooltip,
     TooltipContent,
     TooltipProvider,
     TooltipTrigger,
 } from "@/components/ui/tooltip"
-import { Facebook, Instagram, Linkedin, Send, Twitter, Youtube } from "lucide-react"
+import { Facebook, Instagram, Send, Youtube } from "lucide-react"
 
 function Footerdemo() {
 
@@ -45,28 +44,28 @@ function Footerdemo() {
                     <div className="col-span-1">
                         <h3 className="mb-4 text-lg font-semibold">Quick Links</h3>
                         <nav className="space-y-2 text-sm">
-                            <a href="/" className="block transition-colors hover:text-primary">
+                            <Link href="/" className="block transition-colors hover:text-primary">
                                 Home
-                            </a>
-                            <a href="/about" className="block transition-colors hover:text-primary">
+                            </Link>
+                            <Link href="/about" className="block transition-colors hover:text-primary">
                                 About Us
-                            </a>
-                            <a href="/events" className="block transition-colors hover:text-primary">
+                            </Link>
+                            <Link href="/events" className="block transition-colors hover:text-primary">
                                 Events
-                            </a>
-                            <a href="/support" className="block transition-colors hover:text-primary">
+                            </Link>
+                            <Link href="/support" className="block transition-colors hover:text-primary">
                                 Support
-                            </a>
-                            <a href="/contact" className="block transition-colors hover:text-primary">
+                            </Link>
+                            <Link href="/contact" className="block transition-colors hover:text-primary">
                                 Contact
-                            </a>
+                            </Link>
                         </nav>
                     </div>
                     <div className="col-span-1">
                         <h3 className="mb-4 text-lg font-semibold">Contact Us</h3>
                         <address className="space-y-2 text-sm not-italic">
                             <p>Kingdom Mandate Outreach</p>
-                            <p>Email: info@kingdommandate.org</p>
+                            <p>Email: outreachkingdommandate@gmail.com</p>
                             <p>Support our mission today.</p>
                         </address>
                     </div>

@@ -1,116 +1,240 @@
-export default function Contact() {
+"use client";
+
+import { useState } from "react";
+
+export default function ContactPage() {
+  const [formValues, setFormValues] = useState({
+    firstName: "",
+    lastName: "",
+    email: "",
+    subject: "",
+    message: "",
+  });
+  const [touchedFields, setTouchedFields] = useState<Record<string, boolean>>({});
+  const [submitAttempted, setSubmitAttempted] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitStatus, setSubmitStatus] = useState<"idle" | "success" | "error">(
+    "idle",
+  );
+  const [submitMessage, setSubmitMessage] = useState("");
+  const apiBaseUrl = process.env.NEXT_PUBLIC_SERVER_URL ?? "http://localhost:3000";
+
+  const emailIsValid = (value: string) =>
+    /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+
+  const errors = {
+    firstName: formValues.firstName ? "" : "First name is required.",
+    lastName: formValues.lastName ? "" : "Last name is required.",
+    email: !formValues.email
+      ? "Email is required."
+      : emailIsValid(formValues.email)
+        ? ""
+        : "Enter a valid email address.",
+    subject: formValues.subject ? "" : "Subject is required.",
+    message: formValues.message ? "" : "Message is required.",
+  };
+
+  const showError = (field: keyof typeof errors) =>
+    (submitAttempted || touchedFields[field]) && Boolean(errors[field]);
+
   return (
-    <div className="flex flex-col flex-1 bg-[#f4f6fb]">
-      <section className="px-6 md:px-10 pt-12 pb-8">
-        <div className="max-w-[1000px] mx-auto text-center">
-          <h1 className="text-3xl md:text-4xl font-bold text-[#111827]">
-            Connect With Us
+    <div className="min-h-screen bg-[#eef2fb] text-[#0e121b] flex flex-col flex-1 items-center justify-center p-6 py-12">
+      <div className="w-full max-w-[640px] rounded-[32px] bg-white shadow-[0_30px_80px_rgba(28,38,74,0.18)] border border-[#e6e9f5] px-8 py-10 md:px-10 md:py-12">
+        <div className="text-center">
+          <h1 className="text-3xl md:text-4xl font-bold text-[#0f172a]">
+            Contact Us
           </h1>
-          <p className="mt-3 text-sm md:text-base text-[#6b7280]">
-            Our team is here to support your spiritual leadership journey.
+          <p className="mt-3 text-sm text-[#6370a6]">
+            Share your questions, prayer needs, or partnership ideas.
           </p>
         </div>
-      </section>
-      <section className="px-6 md:px-10 pb-16">
-        <div className="max-w-[1200px] mx-auto">
-          <div className="rounded-3xl bg-white shadow-[0_24px_60px_rgba(15,23,42,0.12)] border border-[#e5e7f2] overflow-hidden">
-            <div className="grid grid-cols-1 lg:grid-cols-[1fr_1.2fr]">
-              <div className="bg-[#f8f9fe] p-8 md:p-10 flex flex-col gap-8">
-                <div>
-                  <h2 className="text-lg font-bold text-[#1f3cff]">Get in Touch</h2>
-                  <p className="mt-2 text-sm text-[#6b7280]">
-                    We would love to hear from you. Reach out anytime.
-                  </p>
-                </div>
-                <div className="flex flex-col gap-5">
-                  <div className="flex items-start gap-4">
-                    <div className="size-10 rounded-xl bg-[#e8edff] text-[#1f3cff] flex items-center justify-center">
-                      <span className="material-symbols-outlined text-xl">
-                        location_on
-                      </span>
-                    </div>
-                    <div>
-                      <p className="text-sm font-semibold text-[#111827]">Our Location</p>
-                      <p className="text-sm text-[#6b7280]">
-                        123 Ministry Way, Leadership City, State 54321
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex items-start gap-4">
-                    <div className="size-10 rounded-xl bg-[#e8edff] text-[#1f3cff] flex items-center justify-center">
-                      <span className="material-symbols-outlined text-xl">
-                        call
-                      </span>
-                    </div>
-                    <div>
-                      <p className="text-sm font-semibold text-[#111827]">Phone Support</p>
-                      <p className="text-sm text-[#6b7280]">+1 (555) 000-0000</p>
-                    </div>
-                  </div>
-                  <div className="flex items-start gap-4">
-                    <div className="size-10 rounded-xl bg-[#e8edff] text-[#1f3cff] flex items-center justify-center">
-                      <span className="material-symbols-outlined text-xl">
-                        mail
-                      </span>
-                    </div>
-                    <div>
-                      <p className="text-sm font-semibold text-[#111827]">Email Us</p>
-                      <p className="text-sm text-[#6b7280]">contact@kingdommandate.org</p>
-                    </div>
-                  </div>
-                </div>
-                <div className="rounded-2xl border border-[#e5e7f2] bg-white p-4">
-                  <div className="h-40 rounded-xl bg-[radial-gradient(circle_at_center,#e2e8f0,#f8fafc)] flex items-center justify-center">
-                    <div className="size-12 rounded-full bg-[#1f3cff] text-white flex items-center justify-center shadow-lg">
-                      <span className="material-symbols-outlined">location_on</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <div className="p-8 md:p-10">
-                <h2 className="text-lg font-bold text-[#111827]">Send a Message</h2>
-                <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-5">
-                  <label className="text-xs font-semibold text-[#6b7280] flex flex-col gap-2">
-                    FULL NAME
-                    <input
-                      className="h-12 rounded-xl border border-[#e5e7f2] px-4 text-sm text-[#111827] placeholder:text-[#9ca3af] focus:border-[#1f3cff] focus:outline-none"
-                      placeholder="John Doe"
-                      type="text"
-                    />
-                  </label>
-                  <label className="text-xs font-semibold text-[#6b7280] flex flex-col gap-2">
-                    EMAIL ADDRESS
-                    <input
-                      className="h-12 rounded-xl border border-[#e5e7f2] px-4 text-sm text-[#111827] placeholder:text-[#9ca3af] focus:border-[#1f3cff] focus:outline-none"
-                      placeholder="john@example.com"
-                      type="email"
-                    />
-                  </label>
-                </div>
-                <label className="mt-5 text-xs font-semibold text-[#6b7280] flex flex-col gap-2">
-                  SUBJECT
-                  <input
-                    className="h-12 rounded-xl border border-[#e5e7f2] px-4 text-sm text-[#111827] placeholder:text-[#9ca3af] focus:border-[#1f3cff] focus:outline-none"
-                    placeholder="General Inquiry"
-                    type="text"
-                  />
-                </label>
-                <label className="mt-5 text-xs font-semibold text-[#6b7280] flex flex-col gap-2">
-                  MESSAGE
-                  <textarea
-                    className="min-h-[130px] rounded-xl border border-[#e5e7f2] px-4 py-3 text-sm text-[#111827] placeholder:text-[#9ca3af] focus:border-[#1f3cff] focus:outline-none"
-                    placeholder="How can we help you?"
-                  />
-                </label>
-                <button className="mt-6 w-full h-12 rounded-xl bg-[#1f3cff] text-white text-sm font-semibold flex items-center justify-center gap-2 shadow-[0_10px_20px_rgba(31,60,255,0.25)] hover:brightness-110 transition-all">
-                  <span className="material-symbols-outlined text-base">send</span>
-                  Send Message
-                </button>
-              </div>
+        <form
+          className="mt-8 space-y-5"
+          onSubmit={async (event) => {
+            event.preventDefault();
+            setSubmitAttempted(true);
+            setSubmitStatus("idle");
+            setSubmitMessage("");
+            if (Object.values(errors).some(Boolean)) {
+              return;
+            }
+            setIsSubmitting(true);
+            try {
+              const response = await fetch(`${apiBaseUrl}/api/contact`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  firstName: formValues.firstName,
+                  lastName: formValues.lastName,
+                  email: formValues.email,
+                  subject: formValues.subject,
+                  message: formValues.message,
+                }),
+              });
+              const payload = (await response.json()) as { message?: string };
+              if (!response.ok) {
+                throw new Error(payload.message || "Failed to send message.");
+              }
+              setSubmitStatus("success");
+              setSubmitMessage(payload.message || "Message sent successfully.");
+              setFormValues({
+                firstName: "",
+                lastName: "",
+                email: "",
+                subject: "",
+                message: "",
+              });
+              setTouchedFields({});
+              setSubmitAttempted(false);
+            } catch (error) {
+              const message =
+                error instanceof Error ? error.message : "Failed to send message.";
+              setSubmitStatus("error");
+              setSubmitMessage(message);
+            } finally {
+              setIsSubmitting(false);
+            }
+          }}
+        >
+          <div className="grid gap-4 md:grid-cols-2">
+            <div className="space-y-2">
+              <label className="text-xs font-semibold tracking-[0.2em] text-[#343f6b] uppercase">
+                First name
+              </label>
+              <input
+                className="h-12 w-full rounded-xl border border-[#cfd6ea] bg-white px-4 text-sm text-[#0f172a] placeholder:text-[#9aa3c8] focus:border-[#2f5be7] focus:outline-none focus:ring-2 focus:ring-[#2f5be7]/20"
+                placeholder="John"
+                type="text"
+                required
+                value={formValues.firstName}
+                onChange={(event) =>
+                  setFormValues((prev) => ({
+                    ...prev,
+                    firstName: event.target.value,
+                  }))
+                }
+                onBlur={() =>
+                  setTouchedFields((prev) => ({ ...prev, firstName: true }))
+                }
+              />
+              {showError("firstName") ? (
+                <p className="text-[11px] text-[#ef4444]">{errors.firstName}</p>
+              ) : null}
+            </div>
+            <div className="space-y-2">
+              <label className="text-xs font-semibold tracking-[0.2em] text-[#343f6b] uppercase">
+                Last name
+              </label>
+              <input
+                className="h-12 w-full rounded-xl border border-[#cfd6ea] bg-white px-4 text-sm text-[#0f172a] placeholder:text-[#9aa3c8] focus:border-[#2f5be7] focus:outline-none focus:ring-2 focus:ring-[#2f5be7]/20"
+                placeholder="Doe"
+                type="text"
+                required
+                value={formValues.lastName}
+                onChange={(event) =>
+                  setFormValues((prev) => ({
+                    ...prev,
+                    lastName: event.target.value,
+                  }))
+                }
+                onBlur={() =>
+                  setTouchedFields((prev) => ({ ...prev, lastName: true }))
+                }
+              />
+              {showError("lastName") ? (
+                <p className="text-[11px] text-[#ef4444]">{errors.lastName}</p>
+              ) : null}
             </div>
           </div>
-        </div>
-      </section>
+          <div className="space-y-2">
+            <label className="text-xs font-semibold tracking-[0.2em] text-[#343f6b] uppercase">
+              Email address
+            </label>
+            <input
+              className="h-12 w-full rounded-xl border border-[#cfd6ea] bg-white px-4 text-sm text-[#0f172a] placeholder:text-[#9aa3c8] focus:border-[#2f5be7] focus:outline-none focus:ring-2 focus:ring-[#2f5be7]/20"
+              placeholder="john@example.com"
+              type="email"
+              required
+              value={formValues.email}
+              onChange={(event) =>
+                setFormValues((prev) => ({
+                  ...prev,
+                  email: event.target.value,
+                }))
+              }
+              onBlur={() =>
+                setTouchedFields((prev) => ({ ...prev, email: true }))
+              }
+            />
+            {showError("email") ? (
+              <p className="text-[11px] text-[#ef4444]">{errors.email}</p>
+            ) : null}
+          </div>
+          <div className="space-y-2">
+            <label className="text-xs font-semibold tracking-[0.2em] text-[#343f6b] uppercase">
+              Subject
+            </label>
+            <input
+              className="h-12 w-full rounded-xl border border-[#cfd6ea] bg-white px-4 text-sm text-[#0f172a] placeholder:text-[#9aa3c8] focus:border-[#2f5be7] focus:outline-none focus:ring-2 focus:ring-[#2f5be7]/20"
+              placeholder="How can we help?"
+              type="text"
+              required
+              value={formValues.subject}
+              onChange={(event) =>
+                setFormValues((prev) => ({
+                  ...prev,
+                  subject: event.target.value,
+                }))
+              }
+              onBlur={() =>
+                setTouchedFields((prev) => ({ ...prev, subject: true }))
+              }
+            />
+            {showError("subject") ? (
+              <p className="text-[11px] text-[#ef4444]">{errors.subject}</p>
+            ) : null}
+          </div>
+          <div className="space-y-2">
+            <label className="text-xs font-semibold tracking-[0.2em] text-[#343f6b] uppercase">
+              Message
+            </label>
+            <textarea
+              className="min-h-[140px] w-full rounded-2xl border border-[#cfd6ea] bg-white px-4 py-3 text-sm text-[#0f172a] placeholder:text-[#9aa3c8] focus:border-[#2f5be7] focus:outline-none focus:ring-2 focus:ring-[#2f5be7]/20"
+              placeholder="Share your message..."
+              required
+              value={formValues.message}
+              onChange={(event) =>
+                setFormValues((prev) => ({
+                  ...prev,
+                  message: event.target.value,
+                }))
+              }
+              onBlur={() =>
+                setTouchedFields((prev) => ({ ...prev, message: true }))
+              }
+            />
+            {showError("message") ? (
+              <p className="text-[11px] text-[#ef4444]">{errors.message}</p>
+            ) : null}
+          </div>
+          <button
+            className="w-full rounded-2xl bg-[#2f5be7] py-3 text-sm font-semibold text-white shadow-[0_12px_30px_rgba(46,91,231,0.2)] hover:brightness-110 disabled:opacity-70"
+            type="submit"
+            disabled={isSubmitting}
+          >
+            {isSubmitting ? "Sending..." : "Send Message"}
+          </button>
+          {submitStatus !== "idle" ? (
+            <p
+              className={`text-center text-xs ${
+                submitStatus === "success" ? "text-[#16a34a]" : "text-[#ef4444]"
+              }`}
+            >
+              {submitMessage}
+            </p>
+          ) : null}
+        </form>
+      </div>
     </div>
   );
 }

@@ -1,18 +1,17 @@
 "use client";
 
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState, useSyncExternalStore } from "react";
+import DashboardHeader from "@/components/dashboard/dashboard-header";
+import DashboardSidebar from "@/components/dashboard/dashboard-sidebar";
 
-const days = Array.from({ length: 35 }, (_, index) =>
-  index + 1 <= 31 ? index + 1 : null,
-);
-
-const dotDays = new Set([2, 3, 8, 10, 15]);
+const calendarPdfUrls = ["/assets/calendar.pdf"];
 
 export default function CalendarPage() {
   const router = useRouter();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [isAuthReady, setIsAuthReady] = useState(false);
+  const apiBaseUrl = process.env.NEXT_PUBLIC_SERVER_URL ?? "http://localhost:3000";
 
   const subscribe = (callback: () => void) => {
     if (typeof window === "undefined") {
@@ -33,6 +32,12 @@ export default function CalendarPage() {
     () => null,
   );
 
+  const rawToken = useSyncExternalStore(
+    subscribe,
+    () => sessionStorage.getItem("km-token"),
+    () => null,
+  );
+
   const onboardingFlag = useSyncExternalStore(
     subscribe,
     () => sessionStorage.getItem("km-onboarding"),
@@ -40,12 +45,61 @@ export default function CalendarPage() {
   );
 
   useEffect(() => {
-    if (!rawUser) {
+    if (!rawUser || !rawToken) {
       router.replace("/login");
     }
-  }, [rawUser, router]);
+  }, [rawUser, rawToken, router]);
 
-  if (!rawUser) {
+  useEffect(() => {
+    let isActive = true;
+    const verify = async () => {
+      if (!rawUser || !rawToken) {
+        return;
+      }
+      try {
+        const response = await fetch(`${apiBaseUrl}/api/auth/me`, {
+          headers: { Authorization: `Bearer ${rawToken}` },
+        });
+        if (!response.ok) {
+          if (response.status === 401) {
+            const refreshResponse = await fetch(`${apiBaseUrl}/api/auth/refresh`, {
+              method: "POST",
+              credentials: "include",
+            });
+            const refreshPayload = (await refreshResponse.json()) as { token?: string };
+            if (!refreshResponse.ok || !refreshPayload.token) {
+              throw new Error("Unauthorized");
+            }
+            sessionStorage.setItem("km-token", refreshPayload.token);
+            const retry = await fetch(`${apiBaseUrl}/api/auth/me`, {
+              headers: { Authorization: `Bearer ${refreshPayload.token}` },
+            });
+            if (!retry.ok) {
+              throw new Error("Unauthorized");
+            }
+          } else {
+            throw new Error("Unauthorized");
+          }
+        }
+        if (isActive) {
+          setIsAuthReady(true);
+        }
+      } catch (error) {
+        sessionStorage.removeItem("km-auth");
+        sessionStorage.removeItem("km-token");
+        sessionStorage.removeItem("km-onboarding");
+        sessionStorage.removeItem("km-preferences");
+        window.dispatchEvent(new Event("km-session"));
+        router.replace("/login");
+      }
+    };
+    verify();
+    return () => {
+      isActive = false;
+    };
+  }, [apiBaseUrl, rawToken, rawUser, router]);
+
+  if (!rawUser || !isAuthReady) {
     return <div className="min-h-screen bg-[#f4f7fb]" />;
   }
 
@@ -60,6 +114,17 @@ export default function CalendarPage() {
     userName = "Leader";
     userRole = "Member";
   }
+
+  const handleLogout = () => {
+    setIsSidebarOpen(false);
+    fetch(`${apiBaseUrl}/api/auth/logout`, { method: "POST", credentials: "include" });
+    sessionStorage.removeItem("km-auth");
+    sessionStorage.removeItem("km-token");
+    sessionStorage.removeItem("km-onboarding");
+    sessionStorage.removeItem("km-preferences");
+    window.dispatchEvent(new Event("km-session"));
+    router.push("/login");
+  };
 
   if (onboardingFlag === "true") {
     return (
@@ -126,396 +191,100 @@ export default function CalendarPage() {
 
   return (
     <div className="min-h-screen flex bg-[#f4f7fb] text-[#0e121b]">
-      <div
-        className={`fixed inset-0 z-40 bg-black/40 transition-opacity lg:hidden ${
-          isSidebarOpen ? "opacity-100" : "pointer-events-none opacity-0"
-        }`}
-        onClick={() => setIsSidebarOpen(false)}
+      <DashboardSidebar
+        isOpen={isSidebarOpen}
+        onClose={() => setIsSidebarOpen(false)}
+        onLogout={handleLogout}
       />
-      <aside
-        className={`fixed inset-y-0 left-0 z-50 w-[280px] flex-col border-r border-[#e8ebf3] bg-white shadow-xl transition-transform lg:hidden ${
-          isSidebarOpen ? "translate-x-0" : "-translate-x-full"
-        }`}
-      >
-        <div className="flex items-center justify-between px-6 py-6">
-          <Link
-            href="/"
-            className="flex items-center gap-3"
-            onClick={() => setIsSidebarOpen(false)}
-          >
-            <div className="size-10 rounded-xl bg-[#2f5be7] text-white flex items-center justify-center">
-              <span className="material-symbols-outlined text-xl">dashboard</span>
-            </div>
-            <div>
-              <p className="text-base font-bold">Kingdom Mandate</p>
-              <p className="text-xs font-semibold text-[#2f5be7] uppercase tracking-widest">
-                Leadership Hub
-              </p>
-            </div>
-          </Link>
-          <button
-            className="size-10 rounded-full border border-[#e8ebf3] text-[#5b6b83] flex items-center justify-center"
-            onClick={() => setIsSidebarOpen(false)}
-          >
-            <span className="material-symbols-outlined text-base">close</span>
-          </button>
-        </div>
-        <nav className="flex flex-col gap-1 px-4">
-          <Link
-            href="/dashboard/prayer-requests"
-            className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold text-[#5b6b83] hover:bg-[#f1f4ff]"
-            onClick={() => setIsSidebarOpen(false)}
-          >
-            <span className="material-symbols-outlined text-lg">home</span>
-            Home
-          </Link>
-          <Link
-            href="/dashboard/courses"
-            className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold text-[#5b6b83] hover:bg-[#f1f4ff]"
-            onClick={() => setIsSidebarOpen(false)}
-          >
-            <span className="material-symbols-outlined text-lg">menu_book</span>
-            Courses / Library
-          </Link>
-          <Link
-            href="/dashboard/calendar"
-            className="flex items-center gap-3 rounded-xl bg-[#2f5be7] text-white px-4 py-3 text-sm font-semibold"
-            onClick={() => setIsSidebarOpen(false)}
-          >
-            <span className="material-symbols-outlined text-lg">calendar_month</span>
-            Calendar/Events
-          </Link>
-          <Link
-            href="/dashboard/prayer-requests"
-            className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold text-[#5b6b83] hover:bg-[#f1f4ff]"
-            onClick={() => setIsSidebarOpen(false)}
-          >
-            <span className="material-symbols-outlined text-lg">volunteer_activism</span>
-            Prayer Requests
-          </Link>
-          <Link
-            href="/dashboard/one-on-one"
-            className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold text-[#5b6b83] hover:bg-[#f1f4ff]"
-            onClick={() => setIsSidebarOpen(false)}
-          >
-            <span className="material-symbols-outlined text-lg">schedule</span>
-            One-on-One Booking
-          </Link>
-          <Link
-            href="/dashboard/testimonies"
-            className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold text-[#5b6b83] hover:bg-[#f1f4ff]"
-            onClick={() => setIsSidebarOpen(false)}
-          >
-            <span className="material-symbols-outlined text-lg">auto_stories</span>
-            Testimonies
-          </Link>
-          <Link
-            href="/dashboard/sermons"
-            className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold text-[#5b6b83] hover:bg-[#f1f4ff]"
-            onClick={() => setIsSidebarOpen(false)}
-          >
-            <span className="material-symbols-outlined text-lg">mic</span>
-            Sermons
-          </Link>
-        </nav>
-        <div className="mt-auto px-4 pb-6">
-          <div className="border-t border-[#e8ebf3] pt-5">
-            <Link
-              href="/dashboard/profile"
-              className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold text-[#5b6b83] hover:bg-[#f1f4ff]"
-              onClick={() => setIsSidebarOpen(false)}
-            >
-              <span className="material-symbols-outlined text-lg">settings</span>
-              Settings
-            </Link>
-            <button
-              className="mt-4 w-full rounded-xl border border-[#e8ebf3] px-4 py-3 text-sm font-semibold text-[#1f2a44] hover:bg-[#f7f9fc]"
-              onClick={() => {
-                setIsSidebarOpen(false);
-                sessionStorage.removeItem("km-auth");
-                sessionStorage.removeItem("km-onboarding");
-                sessionStorage.removeItem("km-preferences");
-                window.dispatchEvent(new Event("km-session"));
-                router.push("/login");
-              }}
-            >
-              Log Out
-            </button>
-          </div>
-        </div>
-      </aside>
-      <aside className="hidden lg:flex w-[280px] flex-col border-r border-[#e8ebf3] bg-white">
-        <Link href="/" className="flex items-center gap-3 px-6 py-6">
-          <div className="size-10 rounded-xl bg-[#2f5be7] text-white flex items-center justify-center">
-            <span className="material-symbols-outlined text-xl">dashboard</span>
-          </div>
-          <div>
-            <p className="text-base font-bold">Kingdom Mandate</p>
-            <p className="text-xs font-semibold text-[#2f5be7] uppercase tracking-widest">
-              Leadership Hub
-            </p>
-          </div>
-        </Link>
-        <nav className="flex flex-col gap-1 px-4">
-          <Link
-            href="/dashboard"
-            className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold text-[#5b6b83] hover:bg-[#f1f4ff]"
-          >
-            <span className="material-symbols-outlined text-lg">home</span>
-            Home
-          </Link>
-          <Link
-            href="/dashboard/courses"
-            className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold text-[#5b6b83] hover:bg-[#f1f4ff]"
-          >
-            <span className="material-symbols-outlined text-lg">menu_book</span>
-            Courses / Library
-          </Link>
-          <Link
-            href="/dashboard/calendar"
-            className="flex items-center gap-3 rounded-xl bg-[#2f5be7] text-white px-4 py-3 text-sm font-semibold"
-          >
-            <span className="material-symbols-outlined text-lg">calendar_month</span>
-            Calendar/Events
-          </Link>
-          <Link
-            href="/dashboard/prayer-requests"
-            className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold text-[#5b6b83] hover:bg-[#f1f4ff]"
-          >
-            <span className="material-symbols-outlined text-lg">volunteer_activism</span>
-            Prayer Requests
-          </Link>
-          <Link
-            href="/dashboard/one-on-one"
-            className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold text-[#5b6b83] hover:bg-[#f1f4ff]"
-          >
-            <span className="material-symbols-outlined text-lg">schedule</span>
-            One-on-One Booking
-          </Link>
-          <Link
-            href="/dashboard/testimonies"
-            className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold text-[#5b6b83] hover:bg-[#f1f4ff]"
-          >
-            <span className="material-symbols-outlined text-lg">auto_stories</span>
-            Testimonies
-          </Link>
-          <Link
-            href="/dashboard/sermons"
-            className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold text-[#5b6b83] hover:bg-[#f1f4ff]"
-          >
-            <span className="material-symbols-outlined text-lg">mic</span>
-            Sermons
-          </Link>
-        </nav>
-        <div className="mt-auto px-4 pb-6">
-          <div className="border-t border-[#e8ebf3] pt-5">
-            <Link
-              href="/dashboard/profile"
-              className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold text-[#5b6b83] hover:bg-[#f1f4ff]"
-            >
-              <span className="material-symbols-outlined text-lg">settings</span>
-              Settings
-            </Link>
-            <button
-              className="mt-4 w-full rounded-xl border border-[#e8ebf3] px-4 py-3 text-sm font-semibold text-[#1f2a44] hover:bg-[#f7f9fc]"
-              onClick={() => {
-                sessionStorage.removeItem("km-auth");
-                sessionStorage.removeItem("km-onboarding");
-                sessionStorage.removeItem("km-preferences");
-                window.dispatchEvent(new Event("km-session"));
-                router.push("/login");
-              }}
-            >
-              Log Out
-            </button>
-          </div>
-        </div>
-      </aside>
-      <div className="flex-1 flex flex-col">
-        <header className="flex flex-col gap-4 border-b border-[#e8ebf3] bg-white px-4 py-4 md:px-6 md:flex-row md:items-center md:justify-between md:gap-6">
-          <div className="flex items-center gap-3 w-full md:max-w-2xl">
-            <button
-              className="size-10 rounded-xl bg-[#2f5be7] text-white flex items-center justify-center lg:hidden"
-              onClick={() => setIsSidebarOpen(true)}
-            >
-              <span className="material-symbols-outlined">menu</span>
-            </button>
-            <div className="flex items-center gap-3 w-full rounded-full border border-[#e8ebf3] bg-[#f7f9fc] px-4 py-2 focus-within:border-[#2f5be7] focus-within:ring-2 focus-within:ring-[#2f5be7]/20">
-              <span className="material-symbols-outlined text-[#8fa1b6] text-base">
-                search
-              </span>
-              <input
-                className="w-full bg-transparent text-sm text-[#1f2a44] outline-none"
-                placeholder="Search events..."
-                type="text"
-              />
-            </div>
-          </div>
-          <div className="flex items-center gap-3 md:gap-4">
-            <button className="size-10 rounded-full border border-[#e8ebf3] text-[#5b6b83] flex items-center justify-center">
-              <span className="material-symbols-outlined text-base">notifications</span>
-            </button>
-            <button className="size-10 rounded-full border border-[#e8ebf3] text-[#5b6b83] flex items-center justify-center">
-              <span className="material-symbols-outlined text-base">chat_bubble</span>
-            </button>
-            <Link
-              href="/dashboard/profile"
-              className="hidden md:flex items-center gap-3 border-l border-[#e8ebf3] pl-4"
-            >
-              <div className="text-right">
-                <p className="text-sm font-bold text-[#1f2a44]">{userName}</p>
-                <p className="text-xs text-[#5b6b83]">{userRole}</p>
-              </div>
-              <div className="size-10 rounded-full bg-[#2f5be7] text-white flex items-center justify-center">
-                <span className="material-symbols-outlined">person</span>
-              </div>
-            </Link>
-          </div>
-        </header>
-        <main className="flex-1 px-4 py-6 md:px-6 lg:px-10 lg:py-10">
+      <div className="flex-1 flex flex-col lg:pl-[280px]">
+        <DashboardHeader
+          onOpenSidebar={() => setIsSidebarOpen(true)}
+          searchPlaceholder="Search events..."
+          userName={userName}
+          userRole={userRole}
+        />
+        <main className="flex-1 px-4 pb-5 pt-24 md:px-6 md:pb-6 lg:px-10 lg:pb-8">
           <div className="mx-auto w-full max-w-6xl">
             <div className="flex flex-col gap-1">
               <h1 className="text-3xl md:text-4xl font-bold">Events Calendar</h1>
               <p className="text-sm text-[#6b75a1]">October 2023</p>
             </div>
-            <div className="mt-8 grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-8">
-              <section className="rounded-3xl border border-[#e6e9f5] bg-white p-6 shadow-sm transition-transform duration-200 hover:-translate-y-1">
-                <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-                  <div className="flex items-center gap-4">
-                    <button className="size-9 rounded-full border border-[#e6e9f5] text-[#7f8ac5] flex items-center justify-center">
-                      <span className="material-symbols-outlined text-base">chevron_left</span>
-                    </button>
-                    <p className="text-lg font-semibold">October 2023</p>
-                    <button className="size-9 rounded-full border border-[#e6e9f5] text-[#7f8ac5] flex items-center justify-center">
-                      <span className="material-symbols-outlined text-base">chevron_right</span>
-                    </button>
+            <div className="mt-8">
+              <section className="rounded-3xl border border-[#e6e9f5] bg-white p-6 shadow-sm">
+                <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                  <div>
+                    <h2 className="text-lg font-semibold text-[#0f172a]">Events PDFs</h2>
+                    <p className="text-xs text-[#8a92b6]">
+                      View and download the latest event calendar.
+                    </p>
                   </div>
-                  <div className="flex flex-wrap items-center gap-3">
-                    <button className="rounded-full border border-[#e6e9f5] bg-white px-4 py-2 text-xs font-semibold text-[#2f5be7] shadow-sm">
-                      Today
-                    </button>
-                    <div className="flex rounded-full border border-[#e6e9f5] bg-[#f7f8ff] p-1">
-                      <button className="rounded-full bg-white px-4 py-2 text-xs font-semibold text-[#2f5be7] shadow-sm">
-                        Month
-                      </button>
-                      <button className="rounded-full px-4 py-2 text-xs font-semibold text-[#8c96c7]">
-                        Week
-                      </button>
-                      <button className="rounded-full px-4 py-2 text-xs font-semibold text-[#8c96c7]">
-                        Day
-                      </button>
-                    </div>
-                    <button className="rounded-full bg-[#2f5be7] px-4 py-2 text-xs font-semibold text-white shadow-sm">
-                      Add Event
-                    </button>
-                  </div>
-                </div>
-                <div className="mt-6 rounded-2xl border border-[#eef0f8] bg-[#fafbff] p-4 transition-transform duration-200 hover:-translate-y-1">
-                  <div className="grid grid-cols-7 text-center text-[11px] font-semibold text-[#9aa3c8]">
-                    <span>Sun</span>
-                    <span>Mon</span>
-                    <span>Tue</span>
-                    <span>Wed</span>
-                    <span>Thu</span>
-                    <span>Fri</span>
-                    <span>Sat</span>
-                  </div>
-                  <div className="mt-4 grid grid-cols-7 gap-2 text-xs text-[#a2aacb]">
-                    {days.map((day, index) => (
-                      <div
-                        className={`min-h-[76px] rounded-xl border border-transparent p-2 text-left ${
-                          day === 5 ? "border-[#2f5be7] bg-white shadow-sm" : ""
-                        } ${day ? "bg-white/60" : "bg-transparent"}`}
-                        key={`${day ?? "empty"}-${index}`}
+                  {calendarPdfUrls.length ? (
+                    <div className="flex items-center gap-3">
+                      <a
+                        className="rounded-full border border-[#e6e9f5] bg-white px-4 py-2 text-xs font-semibold text-[#2f5be7] hover:bg-[#f7f8ff]"
+                        href={calendarPdfUrls[0]}
+                        target="_blank"
+                        rel="noreferrer"
                       >
-                        {day ? (
-                          <div className="flex flex-col gap-2">
-                            <div className="flex items-center justify-between">
-                              <span className="text-xs font-semibold text-[#6c739a]">
-                                {day}
-                              </span>
-                              {dotDays.has(day) && (
-                                <span className="size-1.5 rounded-full bg-[#2f5be7]" />
-                              )}
+                        Open in new tab
+                      </a>
+                      <a
+                        className="rounded-full bg-[#2f5be7] px-4 py-2 text-xs font-semibold text-white shadow-sm hover:brightness-110"
+                        href={calendarPdfUrls[0]}
+                        download
+                      >
+                        Download PDF
+                      </a>
+                    </div>
+                  ) : null}
+                </div>
+                <div className="mt-6 space-y-4">
+                  {calendarPdfUrls.length ? (
+                    calendarPdfUrls.map((pdfUrl) => {
+                      const name = pdfUrl.split("/").pop() || "Event PDF";
+                      return (
+                        <div
+                          className="rounded-2xl border border-[#eef0f8] bg-[#fafbff] p-4"
+                          key={pdfUrl}
+                        >
+                          <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                            <div>
+                              <p className="text-xs font-semibold text-[#8a92b6]">{name}</p>
+                              <p className="text-[11px] text-[#9aa3c8]">
+                                Scroll inside the viewer or open the file in a new tab.
+                              </p>
                             </div>
-                            {day === 5 && (
-                              <span className="rounded-md bg-[#eef1ff] px-2 py-1 text-[10px] font-semibold text-[#2f5be7]">
-                                Youth Prayer
-                              </span>
-                            )}
-                            {day === 12 && (
-                              <span className="rounded-md bg-[#eef1ff] px-2 py-1 text-[10px] font-semibold text-[#2f5be7]">
-                                Bible Study
-                              </span>
-                            )}
+                            <a
+                              className="text-xs font-semibold text-[#2f5be7] hover:underline"
+                              href={pdfUrl}
+                              target="_blank"
+                              rel="noreferrer"
+                            >
+                              Open PDF
+                            </a>
                           </div>
-                        ) : null}
-                      </div>
-                    ))}
-                  </div>
-                  <div className="mt-6 text-center text-xs text-[#a2aacb]">
-                    Viewing full month...
-                  </div>
+                          <div className="mt-4 overflow-hidden rounded-2xl border border-[#e2e8f0] bg-white">
+                            <iframe
+                              className="h-[640px] w-full"
+                              src={pdfUrl}
+                              title={name}
+                            />
+                          </div>
+                        </div>
+                      );
+                    })
+                  ) : (
+                    <div className="rounded-2xl border border-dashed border-[#e2e8f0] bg-[#f8faff] px-6 py-12 text-center">
+                      <p className="text-sm font-semibold text-[#8a92b6]">
+                        Add PDF files to the list to display them here.
+                      </p>
+                      <p className="mt-2 text-xs text-[#b0b9d6]">
+                        Place PDFs in public/assets and update the list above.
+                      </p>
+                    </div>
+                  )}
                 </div>
               </section>
-              <aside className="rounded-3xl border border-[#e6e9f5] bg-white p-6 shadow-sm transition-transform duration-200 hover:-translate-y-1">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h2 className="text-lg font-bold">Upcoming Events</h2>
-                    <p className="text-xs text-[#8a92b6]">Don&#39;t miss out on what&#39;s next</p>
-                  </div>
-                </div>
-                <div className="mt-6 flex flex-col gap-4">
-                  <div className="rounded-2xl border border-[#eef0f8] bg-[#fafbff] p-4 transition-transform duration-200 hover:-translate-y-1">
-                    <div className="flex items-center justify-between">
-                      <span className="rounded-full bg-[#e9ecff] px-3 py-1 text-[10px] font-semibold text-[#2f5be7]">
-                        TODAY
-                      </span>
-                      <span className="text-xs text-[#7b86b2]">7:00 PM</span>
-                    </div>
-                    <h3 className="mt-3 text-sm font-bold">Youth Prayer Night</h3>
-                    <p className="mt-2 text-xs text-[#7b86b2]">
-                      Join us for an evening of spiritual renewal and communal worship at the Main Hall.
-                    </p>
-                    <button className="mt-4 w-full rounded-xl bg-[#2f5be7] px-4 py-2 text-xs font-semibold text-white">
-                      RSVP Now
-                    </button>
-                  </div>
-                  <div className="rounded-2xl border border-[#eef0f8] bg-[#fafbff] p-4 transition-transform duration-200 hover:-translate-y-1">
-                    <div className="flex items-center justify-between">
-                      <span className="rounded-full bg-[#e9ecff] px-3 py-1 text-[10px] font-semibold text-[#2f5be7]">
-                        OCT 12
-                      </span>
-                      <span className="text-xs text-[#7b86b2]">6:30 PM</span>
-                    </div>
-                    <h3 className="mt-3 text-sm font-bold">Leadership Seminar</h3>
-                    <p className="mt-2 text-xs text-[#7b86b2]">
-                      Developing the next generation of spiritual leaders. Workshop by Pastor John Doe.
-                    </p>
-                    <button className="mt-4 w-full rounded-xl bg-[#eef1ff] px-4 py-2 text-xs font-semibold text-[#2f5be7]">
-                      View Details
-                    </button>
-                  </div>
-                  <div className="rounded-2xl border border-[#eef0f8] bg-[#fafbff] p-4 transition-transform duration-200 hover:-translate-y-1">
-                    <div className="flex items-center justify-between">
-                      <span className="rounded-full bg-[#e9ecff] px-3 py-1 text-[10px] font-semibold text-[#2f5be7]">
-                        OCT 15
-                      </span>
-                      <span className="text-xs text-[#7b86b2]">9:00 AM</span>
-                    </div>
-                    <h3 className="mt-3 text-sm font-bold">Community Outreach</h3>
-                    <p className="mt-2 text-xs text-[#7b86b2]">
-                      Distributing supplies to our neighborhood families in need.
-                    </p>
-                    <button className="mt-4 w-full rounded-xl bg-[#eef1ff] px-4 py-2 text-xs font-semibold text-[#2f5be7]">
-                      Sign Up
-                    </button>
-                  </div>
-                </div>
-                <button className="mt-6 w-full rounded-xl border border-[#eef0f8] px-4 py-3 text-xs font-semibold text-[#2f5be7]">
-                  See All Events →
-                </button>
-              </aside>
             </div>
           </div>
         </main>

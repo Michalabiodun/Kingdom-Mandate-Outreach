@@ -3,16 +3,18 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState, useSyncExternalStore } from "react";
+import DashboardHeader from "@/components/dashboard/dashboard-header";
+import DashboardSidebar from "@/components/dashboard/dashboard-sidebar";
 
 const profileTabs = ["General", "Security", "Notifications", "Billing"];
 
-const connectedAccounts = [
+const initialConnectedAccounts = [
   { name: "Google Account", status: "Connected", active: true, icon: "public" },
   { name: "Ministry Calendar", status: "Not Linked", active: false, icon: "calendar_month" },
   { name: "Partner Tools", status: "Connected", active: true, icon: "handshake" },
 ];
 
-const notificationPreferences = [
+const initialNotificationPreferences = [
   {
     title: "Spiritual Growth Updates",
     description: "Receive daily devotionals and growth tracks",
@@ -33,6 +35,12 @@ const notificationPreferences = [
 export default function ProfileSettingsPage() {
   const router = useRouter();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [connectedAccounts, setConnectedAccounts] = useState(initialConnectedAccounts);
+  const [notificationPreferences, setNotificationPreferences] = useState(
+    initialNotificationPreferences,
+  );
+  const [isAuthReady, setIsAuthReady] = useState(false);
+  const apiBaseUrl = process.env.NEXT_PUBLIC_SERVER_URL ?? "http://localhost:3000";
 
   const subscribe = (callback: () => void) => {
     if (typeof window === "undefined") {
@@ -53,6 +61,12 @@ export default function ProfileSettingsPage() {
     () => null,
   );
 
+  const rawToken = useSyncExternalStore(
+    subscribe,
+    () => sessionStorage.getItem("km-token"),
+    () => null,
+  );
+
   const onboardingFlag = useSyncExternalStore(
     subscribe,
     () => sessionStorage.getItem("km-onboarding"),
@@ -60,12 +74,61 @@ export default function ProfileSettingsPage() {
   );
 
   useEffect(() => {
-    if (!rawUser) {
+    if (!rawUser || !rawToken) {
       router.replace("/login");
     }
-  }, [rawUser, router]);
+  }, [rawUser, rawToken, router]);
 
-  if (!rawUser) {
+  useEffect(() => {
+    let isActive = true;
+    const verify = async () => {
+      if (!rawUser || !rawToken) {
+        return;
+      }
+      try {
+        const response = await fetch(`${apiBaseUrl}/api/auth/me`, {
+          headers: { Authorization: `Bearer ${rawToken}` },
+        });
+        if (!response.ok) {
+          if (response.status === 401) {
+            const refreshResponse = await fetch(`${apiBaseUrl}/api/auth/refresh`, {
+              method: "POST",
+              credentials: "include",
+            });
+            const refreshPayload = (await refreshResponse.json()) as { token?: string };
+            if (!refreshResponse.ok || !refreshPayload.token) {
+              throw new Error("Unauthorized");
+            }
+            sessionStorage.setItem("km-token", refreshPayload.token);
+            const retry = await fetch(`${apiBaseUrl}/api/auth/me`, {
+              headers: { Authorization: `Bearer ${refreshPayload.token}` },
+            });
+            if (!retry.ok) {
+              throw new Error("Unauthorized");
+            }
+          } else {
+            throw new Error("Unauthorized");
+          }
+        }
+        if (isActive) {
+          setIsAuthReady(true);
+        }
+      } catch (error) {
+        sessionStorage.removeItem("km-auth");
+        sessionStorage.removeItem("km-token");
+        sessionStorage.removeItem("km-onboarding");
+        sessionStorage.removeItem("km-preferences");
+        window.dispatchEvent(new Event("km-session"));
+        router.replace("/login");
+      }
+    };
+    verify();
+    return () => {
+      isActive = false;
+    };
+  }, [apiBaseUrl, rawToken, rawUser, router]);
+
+  if (!rawUser || !isAuthReady) {
     return <div className="min-h-screen bg-[#f4f7fb]" />;
   }
 
@@ -80,6 +143,17 @@ export default function ProfileSettingsPage() {
     userName = "Leader";
     userRole = "Member";
   }
+
+  const handleLogout = () => {
+    setIsSidebarOpen(false);
+    fetch(`${apiBaseUrl}/api/auth/logout`, { method: "POST", credentials: "include" });
+    sessionStorage.removeItem("km-auth");
+    sessionStorage.removeItem("km-token");
+    sessionStorage.removeItem("km-onboarding");
+    sessionStorage.removeItem("km-preferences");
+    window.dispatchEvent(new Event("km-session"));
+    router.push("/login");
+  };
 
   if (onboardingFlag === "true") {
     return (
@@ -146,253 +220,19 @@ export default function ProfileSettingsPage() {
 
   return (
     <div className="min-h-screen flex bg-[#f4f7fb] text-[#0e121b]">
-      <div
-        className={`fixed inset-0 z-40 bg-black/40 transition-opacity lg:hidden ${
-          isSidebarOpen ? "opacity-100" : "pointer-events-none opacity-0"
-        }`}
-        onClick={() => setIsSidebarOpen(false)}
+      <DashboardSidebar
+        isOpen={isSidebarOpen}
+        onClose={() => setIsSidebarOpen(false)}
+        onLogout={handleLogout}
       />
-      <aside
-        className={`fixed inset-y-0 left-0 z-50 w-[280px] flex-col border-r border-[#e8ebf3] bg-white shadow-xl transition-transform lg:hidden ${
-          isSidebarOpen ? "translate-x-0" : "-translate-x-full"
-        }`}
-      >
-        <div className="flex items-center justify-between px-6 py-6">
-          <Link
-            href="/"
-            className="flex items-center gap-3"
-            onClick={() => setIsSidebarOpen(false)}
-          >
-            <div className="size-10 rounded-xl bg-[#2f5be7] text-white flex items-center justify-center">
-              <span className="material-symbols-outlined text-xl">dashboard</span>
-            </div>
-            <div>
-              <p className="text-base font-bold">Kingdom Mandate</p>
-              <p className="text-xs font-semibold text-[#2f5be7] uppercase tracking-widest">
-                Leadership Hub
-              </p>
-            </div>
-          </Link>
-          <button
-            className="size-10 rounded-full border border-[#e8ebf3] text-[#5b6b83] flex items-center justify-center"
-            onClick={() => setIsSidebarOpen(false)}
-          >
-            <span className="material-symbols-outlined text-base">close</span>
-          </button>
-        </div>
-        <nav className="flex flex-col gap-1 px-4">
-          <Link
-            href="/dashboard/prayer-requests"
-            className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold text-[#5b6b83] hover:bg-[#f1f4ff]"
-            onClick={() => setIsSidebarOpen(false)}
-          >
-            <span className="material-symbols-outlined text-lg">home</span>
-            Home
-          </Link>
-          <Link
-            href="/dashboard/courses"
-            className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold text-[#5b6b83] hover:bg-[#f1f4ff]"
-            onClick={() => setIsSidebarOpen(false)}
-          >
-            <span className="material-symbols-outlined text-lg">menu_book</span>
-            Courses / Library
-          </Link>
-          <Link
-            href="/dashboard/calendar"
-            className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold text-[#5b6b83] hover:bg-[#f1f4ff]"
-            onClick={() => setIsSidebarOpen(false)}
-          >
-            <span className="material-symbols-outlined text-lg">calendar_month</span>
-            Calendar/Events
-          </Link>
-          <Link
-            href="/dashboard/prayer-requests"
-            className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold text-[#5b6b83] hover:bg-[#f1f4ff]"
-            onClick={() => setIsSidebarOpen(false)}
-          >
-            <span className="material-symbols-outlined text-lg">volunteer_activism</span>
-            Prayer Requests
-          </Link>
-          <Link
-            href="/dashboard/one-on-one"
-            className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold text-[#5b6b83] hover:bg-[#f1f4ff]"
-            onClick={() => setIsSidebarOpen(false)}
-          >
-            <span className="material-symbols-outlined text-lg">schedule</span>
-            One-on-One Booking
-          </Link>
-          <Link
-            href="/dashboard/testimonies"
-            className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold text-[#5b6b83] hover:bg-[#f1f4ff]"
-            onClick={() => setIsSidebarOpen(false)}
-          >
-            <span className="material-symbols-outlined text-lg">auto_stories</span>
-            Testimonies
-          </Link>
-          <Link
-            href="/dashboard/sermons"
-            className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold text-[#5b6b83] hover:bg-[#f1f4ff]"
-            onClick={() => setIsSidebarOpen(false)}
-          >
-            <span className="material-symbols-outlined text-lg">mic</span>
-            Sermons
-          </Link>
-        </nav>
-        <div className="mt-auto px-4 pb-6">
-          <div className="border-t border-[#e8ebf3] pt-5">
-            <Link
-              href="/dashboard/profile"
-              className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold text-[#5b6b83] hover:bg-[#f1f4ff]"
-              onClick={() => setIsSidebarOpen(false)}
-            >
-              <span className="material-symbols-outlined text-lg">settings</span>
-              Settings
-            </Link>
-            <button
-              className="mt-4 w-full rounded-xl border border-[#e8ebf3] px-4 py-3 text-sm font-semibold text-[#1f2a44] hover:bg-[#f7f9fc]"
-              onClick={() => {
-                setIsSidebarOpen(false);
-                sessionStorage.removeItem("km-auth");
-                sessionStorage.removeItem("km-onboarding");
-                sessionStorage.removeItem("km-preferences");
-                window.dispatchEvent(new Event("km-session"));
-                router.push("/login");
-              }}
-            >
-              Log Out
-            </button>
-          </div>
-        </div>
-      </aside>
-      <aside className="hidden lg:flex w-[280px] flex-col border-r border-[#e8ebf3] bg-white">
-        <Link href="/" className="flex items-center gap-3 px-6 py-6">
-          <div className="size-10 rounded-xl bg-[#2f5be7] text-white flex items-center justify-center">
-            <span className="material-symbols-outlined text-xl">dashboard</span>
-          </div>
-          <div>
-            <p className="text-base font-bold">Kingdom Mandate</p>
-            <p className="text-xs font-semibold text-[#2f5be7] uppercase tracking-widest">
-              Leadership Hub
-            </p>
-          </div>
-        </Link>
-        <nav className="flex flex-col gap-1 px-4">
-          <Link
-            href="/dashboard"
-            className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold text-[#5b6b83] hover:bg-[#f1f4ff]"
-          >
-            <span className="material-symbols-outlined text-lg">home</span>
-            Home
-          </Link>
-          <Link
-            href="/dashboard/courses"
-            className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold text-[#5b6b83] hover:bg-[#f1f4ff]"
-          >
-            <span className="material-symbols-outlined text-lg">menu_book</span>
-            Courses / Library
-          </Link>
-          <Link
-            href="/dashboard/calendar"
-            className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold text-[#5b6b83] hover:bg-[#f1f4ff]"
-          >
-            <span className="material-symbols-outlined text-lg">calendar_month</span>
-            Calendar/Events
-          </Link>
-          <Link
-            href="/dashboard/prayer-requests"
-            className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold text-[#5b6b83] hover:bg-[#f1f4ff]"
-          >
-            <span className="material-symbols-outlined text-lg">volunteer_activism</span>
-            Prayer Requests
-          </Link>
-          <Link
-            href="/dashboard/one-on-one"
-            className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold text-[#5b6b83] hover:bg-[#f1f4ff]"
-          >
-            <span className="material-symbols-outlined text-lg">schedule</span>
-            One-on-One Booking
-          </Link>
-          <Link
-            href="/dashboard/testimonies"
-            className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold text-[#5b6b83] hover:bg-[#f1f4ff]"
-          >
-            <span className="material-symbols-outlined text-lg">auto_stories</span>
-            Testimonies
-          </Link>
-          <Link
-            href="/dashboard/sermons"
-            className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold text-[#5b6b83] hover:bg-[#f1f4ff]"
-          >
-            <span className="material-symbols-outlined text-lg">mic</span>
-            Sermons
-          </Link>
-        </nav>
-        <div className="mt-auto px-4 pb-6">
-          <div className="border-t border-[#e8ebf3] pt-5">
-            <Link
-              href="/dashboard/profile"
-              className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold text-[#5b6b83] hover:bg-[#f1f4ff]"
-            >
-              <span className="material-symbols-outlined text-lg">settings</span>
-              Settings
-            </Link>
-            <button
-              className="mt-4 w-full rounded-xl border border-[#e8ebf3] px-4 py-3 text-sm font-semibold text-[#1f2a44] hover:bg-[#f7f9fc]"
-              onClick={() => {
-                sessionStorage.removeItem("km-auth");
-                sessionStorage.removeItem("km-onboarding");
-                sessionStorage.removeItem("km-preferences");
-                window.dispatchEvent(new Event("km-session"));
-                router.push("/login");
-              }}
-            >
-              Log Out
-            </button>
-          </div>
-        </div>
-      </aside>
-      <div className="flex-1 flex flex-col">
-        <header className="flex flex-col gap-4 border-b border-[#e8ebf3] bg-white px-4 py-4 md:px-6 md:flex-row md:items-center md:justify-between md:gap-6">
-          <div className="flex items-center gap-3 w-full md:max-w-2xl">
-            <button
-              className="size-10 rounded-xl bg-[#2f5be7] text-white flex items-center justify-center lg:hidden"
-              onClick={() => setIsSidebarOpen(true)}
-            >
-              <span className="material-symbols-outlined">menu</span>
-            </button>
-            <div className="flex items-center gap-3 w-full rounded-full border border-[#e8ebf3] bg-[#f7f9fc] px-4 py-2 focus-within:border-[#2f5be7] focus-within:ring-2 focus-within:ring-[#2f5be7]/20">
-              <span className="material-symbols-outlined text-[#8fa1b6] text-base">
-                search
-              </span>
-              <input
-                className="w-full bg-transparent text-sm text-[#1f2a44] outline-none"
-                placeholder="Search settings..."
-                type="text"
-              />
-            </div>
-          </div>
-          <div className="flex items-center gap-3 md:gap-4">
-            <button className="size-10 rounded-full border border-[#e8ebf3] text-[#5b6b83] flex items-center justify-center">
-              <span className="material-symbols-outlined text-base">notifications</span>
-            </button>
-            <button className="size-10 rounded-full border border-[#e8ebf3] text-[#5b6b83] flex items-center justify-center">
-              <span className="material-symbols-outlined text-base">chat_bubble</span>
-            </button>
-            <Link
-              href="/dashboard/profile"
-              className="hidden md:flex items-center gap-3 border-l border-[#e8ebf3] pl-4"
-            >
-              <div className="text-right">
-                <p className="text-sm font-bold text-[#1f2a44]">{userName}</p>
-                <p className="text-xs text-[#5b6b83]">{userRole}</p>
-              </div>
-              <div className="size-10 rounded-full bg-[#2f5be7] text-white flex items-center justify-center">
-                <span className="material-symbols-outlined">person</span>
-              </div>
-            </Link>
-          </div>
-        </header>
-        <main className="flex-1 px-4 py-6 md:px-6 lg:px-10 lg:py-10">
+      <div className="flex-1 flex flex-col lg:pl-[280px]">
+        <DashboardHeader
+          onOpenSidebar={() => setIsSidebarOpen(true)}
+          searchPlaceholder="Search settings..."
+          userName={userName}
+          userRole={userRole}
+        />
+        <main className="flex-1 px-4 pb-5 pt-24 md:px-6 md:pb-6 lg:px-10 lg:pb-8">
           <div className="mx-auto w-full max-w-6xl">
             <div className="grid grid-cols-1 gap-6">
               <section className="rounded-3xl border border-[#e6ebf3] bg-white shadow-sm transition-transform duration-200 hover:-translate-y-1">
@@ -458,7 +298,7 @@ export default function ProfileSettingsPage() {
                   <div className="space-y-4">
                     <h2 className="text-sm font-bold text-[#0f172a]">Connected Accounts</h2>
                     <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-                      {connectedAccounts.map((account) => (
+                      {connectedAccounts.map((account, index) => (
                         <div
                           className="flex items-center justify-between rounded-2xl border border-[#edf1fb] bg-[#fafbff] px-4 py-4"
                           key={account.name}
@@ -480,6 +320,19 @@ export default function ProfileSettingsPage() {
                             className={`relative h-6 w-11 rounded-full transition-colors ${
                               account.active ? "bg-[#2f5be7]" : "bg-[#d7dce6]"
                             }`}
+                            onClick={() => {
+                              setConnectedAccounts((prev) =>
+                                prev.map((item, itemIndex) =>
+                                  itemIndex === index
+                                    ? {
+                                        ...item,
+                                        active: !item.active,
+                                        status: item.active ? "Not Linked" : "Connected",
+                                      }
+                                    : item,
+                                ),
+                              );
+                            }}
                             type="button"
                           >
                             <span
@@ -495,7 +348,7 @@ export default function ProfileSettingsPage() {
                   <div className="space-y-4">
                     <h2 className="text-sm font-bold text-[#0f172a]">Notification Preferences</h2>
                     <div className="space-y-3">
-                      {notificationPreferences.map((item) => (
+                      {notificationPreferences.map((item, index) => (
                         <div
                           className="flex items-center justify-between rounded-2xl border border-[#edf1fb] bg-white px-4 py-4"
                           key={item.title}
@@ -508,6 +361,15 @@ export default function ProfileSettingsPage() {
                             className={`relative h-6 w-11 rounded-full transition-colors ${
                               item.active ? "bg-[#2f5be7]" : "bg-[#d7dce6]"
                             }`}
+                            onClick={() => {
+                              setNotificationPreferences((prev) =>
+                                prev.map((pref, prefIndex) =>
+                                  prefIndex === index
+                                    ? { ...pref, active: !pref.active }
+                                    : pref,
+                                ),
+                              );
+                            }}
                             type="button"
                           >
                             <span

@@ -3,23 +3,25 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState, useSyncExternalStore } from "react";
-
-const prayerCategories = [
-  "Healing",
-  "Family",
-  "Guidance",
-  "Provision",
-  "Salvation",
-  "Thanksgiving",
-];
+import DashboardHeader from "@/components/dashboard/dashboard-header";
+import DashboardSidebar from "@/components/dashboard/dashboard-sidebar";
 
 export default function PrayerRequestsPage() {
   const router = useRouter();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [isAuthReady, setIsAuthReady] = useState(false);
   const [prayer, setPrayer] = useState("");
-  const [category, setCategory] = useState("");
-  const [isAnonymous, setIsAnonymous] = useState(false);
+  const [formValues, setFormValues] = useState({
+    fullName: "",
+    email: "",
+    phone: "",
+  });
+  const [touchedFields, setTouchedFields] = useState<Record<string, boolean>>({});
+  const [submitAttempted, setSubmitAttempted] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState("");
+  const apiBaseUrl = process.env.NEXT_PUBLIC_SERVER_URL ?? "http://localhost:3000";
 
   const subscribe = (callback: () => void) => {
     if (typeof window === "undefined") {
@@ -40,6 +42,12 @@ export default function PrayerRequestsPage() {
     () => null,
   );
 
+  const rawToken = useSyncExternalStore(
+    subscribe,
+    () => sessionStorage.getItem("km-token"),
+    () => null,
+  );
+
   const onboardingFlag = useSyncExternalStore(
     subscribe,
     () => sessionStorage.getItem("km-onboarding"),
@@ -47,12 +55,61 @@ export default function PrayerRequestsPage() {
   );
 
   useEffect(() => {
-    if (!rawUser) {
+    if (!rawUser || !rawToken) {
       router.replace("/login");
     }
-  }, [rawUser, router]);
+  }, [rawUser, rawToken, router]);
 
-  if (!rawUser) {
+  useEffect(() => {
+    let isActive = true;
+    const verify = async () => {
+      if (!rawUser || !rawToken) {
+        return;
+      }
+      try {
+        const response = await fetch(`${apiBaseUrl}/api/auth/me`, {
+          headers: { Authorization: `Bearer ${rawToken}` },
+        });
+        if (!response.ok) {
+          if (response.status === 401) {
+            const refreshResponse = await fetch(`${apiBaseUrl}/api/auth/refresh`, {
+              method: "POST",
+              credentials: "include",
+            });
+            const refreshPayload = (await refreshResponse.json()) as { token?: string };
+            if (!refreshResponse.ok || !refreshPayload.token) {
+              throw new Error("Unauthorized");
+            }
+            sessionStorage.setItem("km-token", refreshPayload.token);
+            const retry = await fetch(`${apiBaseUrl}/api/auth/me`, {
+              headers: { Authorization: `Bearer ${refreshPayload.token}` },
+            });
+            if (!retry.ok) {
+              throw new Error("Unauthorized");
+            }
+          } else {
+            throw new Error("Unauthorized");
+          }
+        }
+        if (isActive) {
+          setIsAuthReady(true);
+        }
+      } catch (error) {
+        sessionStorage.removeItem("km-auth");
+        sessionStorage.removeItem("km-token");
+        sessionStorage.removeItem("km-onboarding");
+        sessionStorage.removeItem("km-preferences");
+        window.dispatchEvent(new Event("km-session"));
+        router.replace("/login");
+      }
+    };
+    verify();
+    return () => {
+      isActive = false;
+    };
+  }, [apiBaseUrl, rawToken, rawUser, router]);
+
+  if (!rawUser || !isAuthReady) {
     return <div className="min-h-screen bg-[#f4f7fb]" />;
   }
 
@@ -67,6 +124,53 @@ export default function PrayerRequestsPage() {
     userName = "Leader";
     userRole = "Member";
   }
+
+  const handleLogout = () => {
+    setIsSidebarOpen(false);
+    fetch(`${apiBaseUrl}/api/auth/logout`, { method: "POST", credentials: "include" });
+    sessionStorage.removeItem("km-auth");
+    sessionStorage.removeItem("km-token");
+    sessionStorage.removeItem("km-onboarding");
+    sessionStorage.removeItem("km-preferences");
+    window.dispatchEvent(new Event("km-session"));
+    router.push("/login");
+  };
+
+  const emailIsValid = (value: string) =>
+    /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+
+  const formatPhoneInput = (value: string) => {
+    const digits = value.replace(/\D/g, "");
+    if (digits.length <= 3) {
+      return digits;
+    }
+    if (digits.length <= 6) {
+      return `(${digits.slice(0, 3)}) ${digits.slice(3)}`;
+    }
+    if (digits.length <= 10) {
+      return `(${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(6)}`;
+    }
+    return `+${digits.slice(0, 15)}`;
+  };
+
+  const phoneDigits = formValues.phone.replace(/\D/g, "");
+  const errors = {
+    prayer: prayer ? "" : "Prayer details are required.",
+    fullName: formValues.fullName ? "" : "Full name is required.",
+    email: !formValues.email
+      ? "Email is required."
+      : emailIsValid(formValues.email)
+        ? ""
+        : "Enter a valid email address.",
+    phone: !formValues.phone
+      ? "Phone number is required."
+      : phoneDigits.length < 10
+        ? "Enter a valid phone number."
+        : "",
+  };
+
+  const showError = (field: keyof typeof errors) =>
+    (submitAttempted || touchedFields[field]) && Boolean(errors[field]);
 
   if (onboardingFlag === "true") {
     return (
@@ -133,253 +237,19 @@ export default function PrayerRequestsPage() {
 
   return (
     <div className="min-h-screen flex bg-[#f4f7fb] text-[#0e121b]">
-      <div
-        className={`fixed inset-0 z-40 bg-black/40 transition-opacity lg:hidden ${
-          isSidebarOpen ? "opacity-100" : "pointer-events-none opacity-0"
-        }`}
-        onClick={() => setIsSidebarOpen(false)}
+      <DashboardSidebar
+        isOpen={isSidebarOpen}
+        onClose={() => setIsSidebarOpen(false)}
+        onLogout={handleLogout}
       />
-      <aside
-        className={`fixed inset-y-0 left-0 z-50 w-[280px] flex-col border-r border-[#e8ebf3] bg-white shadow-xl transition-transform lg:hidden ${
-          isSidebarOpen ? "translate-x-0" : "-translate-x-full"
-        }`}
-      >
-        <div className="flex items-center justify-between px-6 py-6">
-          <Link
-            href="/"
-            className="flex items-center gap-3"
-            onClick={() => setIsSidebarOpen(false)}
-          >
-            <div className="size-10 rounded-xl bg-[#2f5be7] text-white flex items-center justify-center">
-              <span className="material-symbols-outlined text-xl">dashboard</span>
-            </div>
-            <div>
-              <p className="text-base font-bold">Kingdom Mandate</p>
-              <p className="text-xs font-semibold text-[#2f5be7] uppercase tracking-widest">
-                Leadership Hub
-              </p>
-            </div>
-          </Link>
-          <button
-            className="size-10 rounded-full border border-[#e8ebf3] text-[#5b6b83] flex items-center justify-center"
-            onClick={() => setIsSidebarOpen(false)}
-          >
-            <span className="material-symbols-outlined text-base">close</span>
-          </button>
-        </div>
-        <nav className="flex flex-col gap-1 px-4">
-          <Link
-            href="/dashboard/calendar"
-            className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold text-[#5b6b83] hover:bg-[#f1f4ff]"
-            onClick={() => setIsSidebarOpen(false)}
-          >
-            <span className="material-symbols-outlined text-lg">home</span>
-            Home
-          </Link>
-          <Link
-            href="/dashboard/courses"
-            className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold text-[#5b6b83] hover:bg-[#f1f4ff]"
-            onClick={() => setIsSidebarOpen(false)}
-          >
-            <span className="material-symbols-outlined text-lg">menu_book</span>
-            Courses / Library
-          </Link>
-          <Link
-            href="/dashboard/calendar"
-            className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold text-[#5b6b83] hover:bg-[#f1f4ff]"
-            onClick={() => setIsSidebarOpen(false)}
-          >
-            <span className="material-symbols-outlined text-lg">calendar_month</span>
-            Calendar/Events
-          </Link>
-          <Link
-            href="/dashboard/prayer-requests"
-            className="flex items-center gap-3 rounded-xl bg-[#2f5be7] text-white px-4 py-3 text-sm font-semibold"
-            onClick={() => setIsSidebarOpen(false)}
-          >
-            <span className="material-symbols-outlined text-lg">volunteer_activism</span>
-            Prayer Requests
-          </Link>
-          <Link
-            href="/dashboard/one-on-one"
-            className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold text-[#5b6b83] hover:bg-[#f1f4ff]"
-            onClick={() => setIsSidebarOpen(false)}
-          >
-            <span className="material-symbols-outlined text-lg">schedule</span>
-            One-on-One Booking
-          </Link>
-          <Link
-            href="/dashboard/testimonies"
-            className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold text-[#5b6b83] hover:bg-[#f1f4ff]"
-            onClick={() => setIsSidebarOpen(false)}
-          >
-            <span className="material-symbols-outlined text-lg">auto_stories</span>
-            Testimonies
-          </Link>
-          <Link
-            href="/dashboard/sermons"
-            className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold text-[#5b6b83] hover:bg-[#f1f4ff]"
-            onClick={() => setIsSidebarOpen(false)}
-          >
-            <span className="material-symbols-outlined text-lg">mic</span>
-            Sermons
-          </Link>
-        </nav>
-        <div className="mt-auto px-4 pb-6">
-          <div className="border-t border-[#e8ebf3] pt-5">
-            <Link
-              href="/dashboard/profile"
-              className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold text-[#5b6b83] hover:bg-[#f1f4ff]"
-              onClick={() => setIsSidebarOpen(false)}
-            >
-              <span className="material-symbols-outlined text-lg">settings</span>
-              Settings
-            </Link>
-            <button
-              className="mt-4 w-full rounded-xl border border-[#e8ebf3] px-4 py-3 text-sm font-semibold text-[#1f2a44] hover:bg-[#f7f9fc]"
-              onClick={() => {
-                setIsSidebarOpen(false);
-                sessionStorage.removeItem("km-auth");
-                sessionStorage.removeItem("km-onboarding");
-                sessionStorage.removeItem("km-preferences");
-                window.dispatchEvent(new Event("km-session"));
-                router.push("/login");
-              }}
-            >
-              Log Out
-            </button>
-          </div>
-        </div>
-      </aside>
-      <aside className="hidden lg:flex w-[280px] flex-col border-r border-[#e8ebf3] bg-white">
-        <div className="flex items-center gap-3 px-6 py-6">
-          <div className="size-10 rounded-xl bg-[#2f5be7] text-white flex items-center justify-center">
-            <span className="material-symbols-outlined text-xl">dashboard</span>
-          </div>
-          <div>
-            <p className="text-base font-bold">Kingdom Mandate</p>
-            <p className="text-xs font-semibold text-[#2f5be7] uppercase tracking-widest">
-              Leadership Hub
-            </p>
-          </div>
-        </div>
-        <nav className="flex flex-col gap-1 px-4">
-          <Link
-            href="/dashboard"
-            className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold text-[#5b6b83] hover:bg-[#f1f4ff]"
-          >
-            <span className="material-symbols-outlined text-lg">home</span>
-            Home
-          </Link>
-          <Link
-            href="/dashboard/courses"
-            className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold text-[#5b6b83] hover:bg-[#f1f4ff]"
-          >
-            <span className="material-symbols-outlined text-lg">menu_book</span>
-            Courses / Library
-          </Link>
-          <Link
-            href="/dashboard/calendar"
-            className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold text-[#5b6b83] hover:bg-[#f1f4ff]"
-          >
-            <span className="material-symbols-outlined text-lg">calendar_month</span>
-            Calendar/Events
-          </Link>
-          <Link
-            href="/dashboard/prayer-requests"
-            className="flex items-center gap-3 rounded-xl bg-[#2f5be7] text-white px-4 py-3 text-sm font-semibold"
-          >
-            <span className="material-symbols-outlined text-lg">volunteer_activism</span>
-            Prayer Requests
-          </Link>
-          <Link
-            href="/dashboard/one-on-one"
-            className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold text-[#5b6b83] hover:bg-[#f1f4ff]"
-          >
-            <span className="material-symbols-outlined text-lg">schedule</span>
-            One-on-One Booking
-          </Link>
-          <Link
-            href="/dashboard/testimonies"
-            className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold text-[#5b6b83] hover:bg-[#f1f4ff]"
-          >
-            <span className="material-symbols-outlined text-lg">auto_stories</span>
-            Testimonies
-          </Link>
-          <Link
-            href="/dashboard/sermons"
-            className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold text-[#5b6b83] hover:bg-[#f1f4ff]"
-          >
-            <span className="material-symbols-outlined text-lg">mic</span>
-            Sermons
-          </Link>
-        </nav>
-        <div className="mt-auto px-4 pb-6">
-          <div className="border-t border-[#e8ebf3] pt-5">
-            <Link
-              href="/dashboard/profile"
-              className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold text-[#5b6b83] hover:bg-[#f1f4ff]"
-            >
-              <span className="material-symbols-outlined text-lg">settings</span>
-              Settings
-            </Link>
-            <button
-              className="mt-4 w-full rounded-xl border border-[#e8ebf3] px-4 py-3 text-sm font-semibold text-[#1f2a44] hover:bg-[#f7f9fc]"
-              onClick={() => {
-                sessionStorage.removeItem("km-auth");
-                sessionStorage.removeItem("km-onboarding");
-                sessionStorage.removeItem("km-preferences");
-                window.dispatchEvent(new Event("km-session"));
-                router.push("/login");
-              }}
-            >
-              Log Out
-            </button>
-          </div>
-        </div>
-      </aside>
-      <div className="flex-1 flex flex-col">
-        <header className="flex flex-col gap-4 border-b border-[#e8ebf3] bg-white px-4 py-4 md:px-6 md:flex-row md:items-center md:justify-between md:gap-6">
-          <div className="flex items-center gap-3 w-full md:max-w-2xl">
-            <button
-              className="size-10 rounded-xl bg-[#2f5be7] text-white flex items-center justify-center lg:hidden"
-              onClick={() => setIsSidebarOpen(true)}
-            >
-              <span className="material-symbols-outlined">menu</span>
-            </button>
-            <div className="flex items-center gap-3 w-full rounded-full border border-[#e8ebf3] bg-[#f7f9fc] px-4 py-2 focus-within:border-[#2f5be7] focus-within:ring-2 focus-within:ring-[#2f5be7]/20">
-              <span className="material-symbols-outlined text-[#8fa1b6] text-base">
-                search
-              </span>
-              <input
-                className="w-full bg-transparent text-sm text-[#1f2a44] outline-none"
-                placeholder="Search prayer requests..."
-                type="text"
-              />
-            </div>
-          </div>
-          <div className="flex items-center gap-3 md:gap-4">
-            <button className="size-10 rounded-full border border-[#e8ebf3] text-[#5b6b83] flex items-center justify-center">
-              <span className="material-symbols-outlined text-base">notifications</span>
-            </button>
-            <button className="size-10 rounded-full border border-[#e8ebf3] text-[#5b6b83] flex items-center justify-center">
-              <span className="material-symbols-outlined text-base">chat_bubble</span>
-            </button>
-            <Link
-              href="/dashboard/profile"
-              className="hidden md:flex items-center gap-3 border-l border-[#e8ebf3] pl-4"
-            >
-              <div className="text-right">
-                <p className="text-sm font-bold text-[#1f2a44]">{userName}</p>
-                <p className="text-xs text-[#5b6b83]">{userRole}</p>
-              </div>
-              <div className="size-10 rounded-full bg-[#2f5be7] text-white flex items-center justify-center">
-                <span className="material-symbols-outlined">person</span>
-              </div>
-            </Link>
-          </div>
-        </header>
-        <main className="flex-1 px-4 py-6 md:px-6 lg:px-10 lg:py-10">
+      <div className="flex-1 flex flex-col lg:pl-[280px]">
+        <DashboardHeader
+          onOpenSidebar={() => setIsSidebarOpen(true)}
+          searchPlaceholder="Search prayer requests..."
+          userName={userName}
+          userRole={userRole}
+        />
+        <main className="flex-1 px-4 pb-5 pt-24 md:px-6 md:pb-6 lg:px-10 lg:pb-8">
           <section className="mx-auto w-full max-w-4xl">
             <div className="rounded-[28px] border border-[#e6ebf2] bg-white shadow-[0_30px_80px_rgba(15,23,42,0.12)] overflow-hidden transition-transform duration-200 hover:-translate-y-1">
               {isSubmitted ? (
@@ -437,9 +307,50 @@ export default function PrayerRequestsPage() {
                   </div>
                   <form
                     className="px-6 py-6 md:px-10 md:py-8 space-y-6"
-                    onSubmit={(event) => {
+                    onSubmit={async (event) => {
                       event.preventDefault();
-                      setIsSubmitted(true);
+                      setSubmitAttempted(true);
+                      setSubmitError("");
+                      if (Object.values(errors).some(Boolean)) {
+                        return;
+                      }
+                      setIsSubmitting(true);
+                      try {
+                        const response = await fetch(
+                          `${apiBaseUrl}/api/prayer-request`,
+                          {
+                            method: "POST",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify({
+                              firstName: formValues.fullName,
+                              email: formValues.email,
+                              phone: formValues.phone,
+                              message: prayer,
+                            }),
+                          },
+                        );
+                        const payload = (await response.json()) as {
+                          message?: string;
+                        };
+                        if (!response.ok) {
+                          throw new Error(
+                            payload.message || "Failed to submit prayer request.",
+                          );
+                        }
+                        setIsSubmitted(true);
+                        setPrayer("");
+                        setFormValues({ fullName: "", email: "", phone: "" });
+                        setTouchedFields({});
+                        setSubmitAttempted(false);
+                      } catch (error) {
+                        const message =
+                          error instanceof Error
+                            ? error.message
+                            : "Failed to submit prayer request.";
+                        setSubmitError(message);
+                      } finally {
+                        setIsSubmitting(false);
+                      }
                     }}
                   >
                     <div className="space-y-2">
@@ -454,61 +365,99 @@ export default function PrayerRequestsPage() {
                         placeholder="Share your heart..."
                         value={prayer}
                         onChange={(event) => setPrayer(event.target.value)}
+                        onBlur={() =>
+                          setTouchedFields((prev) => ({ ...prev, prayer: true }))
+                        }
                       />
+                      {showError("prayer") ? (
+                        <p className="text-[11px] text-[#ef4444]">{errors.prayer}</p>
+                      ) : null}
                     </div>
-                    <div className="grid grid-cols-1 gap-4 md:grid-cols-[1.2fr_1fr]">
+                    <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                       <div className="space-y-2">
-                        <label className="text-xs font-semibold tracking-[0.2em] text-[#64748b] uppercase flex items-center gap-2">
-                          <span className="material-symbols-outlined text-[#2f5be7] text-base">
-                            category
-                          </span>
-                          Prayer Category
+                        <label className="text-xs font-semibold tracking-[0.2em] text-[#64748b] uppercase">
+                          Full name
                         </label>
-                        <div className="relative">
-                          <select
-                            className="h-12 w-full appearance-none rounded-xl border border-[#e5e7f2] bg-white px-4 text-sm text-[#111827] focus:border-[#2f5be7] focus:outline-none focus:ring-2 focus:ring-[#2f5be7]/20"
-                            value={category}
-                            onChange={(event) => setCategory(event.target.value)}
-                          >
-                            <option value="">Select Category</option>
-                            {prayerCategories.map((item) => (
-                              <option key={item} value={item}>
-                                {item}
-                              </option>
-                            ))}
-                          </select>
-                          <span className="material-symbols-outlined absolute right-4 top-1/2 -translate-y-1/2 text-[#9aa4b2] text-base">
-                            expand_more
-                          </span>
-                        </div>
+                        <input
+                          className="h-12 w-full rounded-xl border border-[#e5e7f2] bg-white px-4 text-sm text-[#111827] placeholder:text-[#9aa4b2] focus:border-[#2f5be7] focus:outline-none focus:ring-2 focus:ring-[#2f5be7]/20"
+                          placeholder="John Doe"
+                          type="text"
+                          required
+                          value={formValues.fullName}
+                          onChange={(event) =>
+                            setFormValues((prev) => ({
+                              ...prev,
+                              fullName: event.target.value,
+                            }))
+                          }
+                          onBlur={() =>
+                            setTouchedFields((prev) => ({ ...prev, fullName: true }))
+                          }
+                        />
+                        {showError("fullName") ? (
+                          <p className="text-[11px] text-[#ef4444]">
+                            {errors.fullName}
+                          </p>
+                        ) : null}
                       </div>
                       <div className="space-y-2">
-                        <label className="text-xs font-semibold tracking-[0.2em] text-[#64748b] uppercase flex items-center gap-2">
-                          <span className="material-symbols-outlined text-[#2f5be7] text-base">
-                            lock
-                          </span>
-                          Privacy
+                        <label className="text-xs font-semibold tracking-[0.2em] text-[#64748b] uppercase">
+                          Email address
                         </label>
-                        <div className="flex items-center justify-between rounded-xl border border-[#e5e7f2] bg-white px-4 py-3">
-                          <p className="text-sm font-semibold text-[#111827]">
-                            Post Anonymously
-                          </p>
-                          <label className="relative inline-flex cursor-pointer items-center">
-                            <input
-                              type="checkbox"
-                              className="sr-only peer"
-                              checked={isAnonymous}
-                              onChange={(event) => setIsAnonymous(event.target.checked)}
-                            />
-                            <div className="h-6 w-11 rounded-full bg-[#e5e7f2] transition peer-checked:bg-[#2f5be7] after:absolute after:left-[2px] after:top-[2px] after:h-5 after:w-5 after:rounded-full after:bg-white after:transition after:content-[''] peer-checked:after:translate-x-5" />
-                          </label>
-                        </div>
+                        <input
+                          className="h-12 w-full rounded-xl border border-[#e5e7f2] bg-white px-4 text-sm text-[#111827] placeholder:text-[#9aa4b2] focus:border-[#2f5be7] focus:outline-none focus:ring-2 focus:ring-[#2f5be7]/20"
+                          placeholder="john@example.com"
+                          type="email"
+                          required
+                          value={formValues.email}
+                          onChange={(event) =>
+                            setFormValues((prev) => ({
+                              ...prev,
+                              email: event.target.value,
+                            }))
+                          }
+                          onBlur={() =>
+                            setTouchedFields((prev) => ({ ...prev, email: true }))
+                          }
+                        />
+                        {showError("email") ? (
+                          <p className="text-[11px] text-[#ef4444]">{errors.email}</p>
+                        ) : null}
+                      </div>
+                      <div className="space-y-2 md:col-span-2">
+                        <label className="text-xs font-semibold tracking-[0.2em] text-[#64748b] uppercase">
+                          Phone number
+                        </label>
+                        <input
+                          className="h-12 w-full rounded-xl border border-[#e5e7f2] bg-white px-4 text-sm text-[#111827] placeholder:text-[#9aa4b2] focus:border-[#2f5be7] focus:outline-none focus:ring-2 focus:ring-[#2f5be7]/20"
+                          placeholder="+1 (555) 000-0000"
+                          type="tel"
+                          required
+                          value={formValues.phone}
+                          onChange={(event) =>
+                            setFormValues((prev) => ({
+                              ...prev,
+                              phone: formatPhoneInput(event.target.value),
+                            }))
+                          }
+                          onBlur={() =>
+                            setTouchedFields((prev) => ({ ...prev, phone: true }))
+                          }
+                        />
+                        {showError("phone") ? (
+                          <p className="text-[11px] text-[#ef4444]">{errors.phone}</p>
+                        ) : null}
                       </div>
                     </div>
                     <p className="text-xs text-[#9aa4b2] text-center italic">
                       “For where two or three are gathered together in my name, there am I
                       in the midst of them.” — Matthew 18:20
                     </p>
+                    {submitError ? (
+                      <p className="text-center text-xs text-[#ef4444]">
+                        {submitError}
+                      </p>
+                    ) : null}
                     <div className="flex flex-col sm:flex-row justify-end gap-3 pt-2">
                       <button
                         type="button"
@@ -519,9 +468,10 @@ export default function PrayerRequestsPage() {
                       </button>
                       <button
                         type="submit"
-                        className="h-11 rounded-xl bg-[#2f5be7] px-6 text-sm font-semibold text-white hover:brightness-110"
+                        className="h-11 rounded-xl bg-[#2f5be7] px-6 text-sm font-semibold text-white hover:brightness-110 disabled:opacity-70"
+                        disabled={isSubmitting}
                       >
-                        Send Request
+                        {isSubmitting ? "Sending..." : "Send Request"}
                       </button>
                     </div>
                   </form>

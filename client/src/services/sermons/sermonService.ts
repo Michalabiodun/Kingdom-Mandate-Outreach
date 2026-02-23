@@ -75,7 +75,7 @@ class SermonService {
 
   // Like/unlike sermon
   async toggleLikeSermon(id: string): Promise<{ liked: boolean; likesCount: number }> {
-    const response = await apiClient.post(
+    const response = await apiClient.post<{ liked: boolean; likesCount: number }>(
       `${API_ENDPOINTS.SERMONS.DETAIL(id)}/like`
     );
     return response.data;
@@ -130,7 +130,7 @@ class SermonService {
     formData.append('file', file);
     formData.append('type', mediaType);
 
-    const response = await apiClient.upload(
+    const response = await apiClient.upload<{ url: string }>(
       `${API_ENDPOINTS.SERMONS.DETAIL(sermonId)}/upload`,
       formData
     );

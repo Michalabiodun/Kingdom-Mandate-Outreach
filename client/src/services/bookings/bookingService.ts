@@ -57,7 +57,7 @@ class BookingService {
     date: string, 
     type?: 'counseling' | 'prayer' | 'meeting'
   ): Promise<{ date: string; slots: { time: string; available: boolean }[] }> {
-    const response = await apiClient.get(
+    const response = await apiClient.get<{ date: string; slots: { time: string; available: boolean }[] }>(
       API_ENDPOINTS.BOOKINGS.AVAILABLE_SLOTS,
       { params: { date, type } }
     );
@@ -130,7 +130,14 @@ class BookingService {
     completed: number;
     thisMonth: number;
   }> {
-    const response = await apiClient.get(
+    const response = await apiClient.get<{
+      total: number;
+      pending: number;
+      confirmed: number;
+      cancelled: number;
+      completed: number;
+      thisMonth: number;
+    }>(
       `${API_ENDPOINTS.BOOKINGS.LIST}/stats`
     );
     return response.data;
@@ -142,7 +149,7 @@ class BookingService {
     time: string, 
     type: 'counseling' | 'prayer' | 'meeting'
   ): Promise<{ available: boolean; reason?: string }> {
-    const response = await apiClient.get(
+    const response = await apiClient.get<{ available: boolean; reason?: string }>(
       `${API_ENDPOINTS.BOOKINGS.AVAILABLE_SLOTS}/check`,
       { params: { date, time, type } }
     );
@@ -151,7 +158,7 @@ class BookingService {
 
   // Send booking reminder
   async sendReminder(id: string): Promise<{ sent: boolean }> {
-    const response = await apiClient.post(
+    const response = await apiClient.post<{ sent: boolean }>(
       `${API_ENDPOINTS.BOOKINGS.DETAIL(id)}/reminder`
     );
     return response.data;
@@ -166,7 +173,11 @@ class BookingService {
     bookings: Booking[]; 
     availableSlots: number;
   }[]> {
-    const response = await apiClient.get(
+    const response = await apiClient.get<{
+      date: string;
+      bookings: Booking[];
+      availableSlots: number;
+    }[]>(
       `${API_ENDPOINTS.BOOKINGS.LIST}/calendar`,
       { params: { month, type } }
     );

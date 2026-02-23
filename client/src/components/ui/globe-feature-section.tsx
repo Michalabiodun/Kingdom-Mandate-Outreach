@@ -99,7 +99,7 @@ export function Globe({
     }
 
     const onRender = useCallback(
-        (state: Record<string, unknown> & { phi: number; width: number; height: number }) => {
+        (state: Record<string, any>) => {
             if (!pointerInteracting.current) phiRef.current += 0.005
             state.phi = phiRef.current + r
             state.width = widthRef.current * 2

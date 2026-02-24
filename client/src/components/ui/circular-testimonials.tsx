@@ -101,6 +101,16 @@ export const CircularTestimonials = ({
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
+  // Navigation handlers
+  const handleNext = useCallback(() => {
+    setActiveIndex((prev) => (prev + 1) % testimonialsLength);
+    if (autoplayIntervalRef.current) clearInterval(autoplayIntervalRef.current);
+  }, [testimonialsLength]);
+  const handlePrev = useCallback(() => {
+    setActiveIndex((prev) => (prev - 1 + testimonialsLength) % testimonialsLength);
+    if (autoplayIntervalRef.current) clearInterval(autoplayIntervalRef.current);
+  }, [testimonialsLength]);
+
   // Autoplay
   useEffect(() => {
     if (autoplay) {
@@ -121,18 +131,7 @@ export const CircularTestimonials = ({
     };
     window.addEventListener("keydown", handleKey);
     return () => window.removeEventListener("keydown", handleKey);
-    // eslint-disable-next-line
-  }, [activeIndex, testimonialsLength]);
-
-  // Navigation handlers
-  const handleNext = useCallback(() => {
-    setActiveIndex((prev) => (prev + 1) % testimonialsLength);
-    if (autoplayIntervalRef.current) clearInterval(autoplayIntervalRef.current);
-  }, [testimonialsLength]);
-  const handlePrev = useCallback(() => {
-    setActiveIndex((prev) => (prev - 1 + testimonialsLength) % testimonialsLength);
-    if (autoplayIntervalRef.current) clearInterval(autoplayIntervalRef.current);
-  }, [testimonialsLength]);
+  }, [handlePrev, handleNext]);
 
   // Compute transforms for each image (always show 3: left, center, right)
   function getImageStyle(index: number): React.CSSProperties {
@@ -192,14 +191,14 @@ export const CircularTestimonials = ({
         {/* Images */}
         <div className="image-container" ref={imageContainerRef}>
           {testimonials.map((testimonial, index) => (
-            <img
-              key={testimonial.src}
-              src={testimonial.src}
-              alt={testimonial.name}
-              className="testimonial-image"
+            <div
+              key={`${testimonial.name}-${index}`}
+              className="testimonial-tile"
               data-index={index}
               style={getImageStyle(index)}
-            />
+            >
+              <span className="tile-name">{testimonial.name}</span>
+            </div>
           ))}
         </div>
         {/* Content */}
@@ -320,6 +319,30 @@ export const CircularTestimonials = ({
           border-radius: 1.5rem;
           box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
         }
+        .testimonial-tile {
+          position: absolute;
+          width: 100%;
+          height: 100%;
+          border-radius: 1.5rem;
+          box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+          background: linear-gradient(135deg, #81acfa 0%, #1b358d 100%);
+          background-color: #1b358d;
+          border: 1px solid rgba(255,255,255,0.08);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+        .tile-name {
+          color: #ffffff;
+          font-weight: 800;
+          letter-spacing: 0.02em;
+          text-align: center;
+          padding: 0 1rem;
+          line-height: 1.2;
+          font-size: clamp(1.25rem, 3.5vw, 2rem);
+          text-shadow: 0 2px 8px rgba(0,0,0,0.25);
+        }
+        
         .testimonial-content {
           display: flex;
           flex-direction: column;

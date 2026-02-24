@@ -9,7 +9,6 @@ import DashboardSidebar from "@/components/dashboard/dashboard-sidebar";
 export default function TestimoniesPage() {
   const router = useRouter();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [anonymous, setAnonymous] = useState(false);
   const [isAuthReady, setIsAuthReady] = useState(false);
   const [formValues, setFormValues] = useState({
     title: "",
@@ -145,8 +144,7 @@ export default function TestimoniesPage() {
 
   const errors = {
     title: formValues.title ? "" : "Title is required.",
-    fullName:
-      anonymous || formValues.fullName ? "" : "Full name is required.",
+    fullName: formValues.fullName ? "" : "Full name is required.",
     email: !formValues.email
       ? "Email is required."
       : emailIsValid(formValues.email)
@@ -265,11 +263,10 @@ export default function TestimoniesPage() {
                       method: "POST",
                       headers: { "Content-Type": "application/json" },
                       body: JSON.stringify({
-                        fullName: anonymous ? "Anonymous" : formValues.fullName,
+                        fullName: formValues.fullName,
                         email: formValues.email,
                         message: formValues.story,
                         title: formValues.title,
-                        isAnonymous: anonymous,
                       }),
                     });
                     const payload = (await response.json()) as {
@@ -281,11 +278,7 @@ export default function TestimoniesPage() {
                       );
                     }
                     setSubmitStatus("success");
-                    setSubmitMessage(
-                      anonymous 
-                        ? "Your anonymous testimony has been submitted successfully and will appear on the landing page!"
-                        : payload.message || "Testimony submitted successfully."
-                    );
+                    setSubmitMessage(payload.message || "Testimony submitted successfully.");
                     setFormValues({ title: "", fullName: "", email: "", story: "" });
                     setTouchedFields({});
                     setSubmitAttempted(false);
@@ -334,7 +327,7 @@ export default function TestimoniesPage() {
                       className="h-12 w-full rounded-xl border border-[#e5e7f2] bg-white px-4 text-sm text-[#111827] placeholder:text-[#9aa4b2] focus:border-[#2f5be7] focus:outline-none focus:ring-2 focus:ring-[#2f5be7]/20"
                       placeholder="John Doe"
                       type="text"
-                      required={!anonymous}
+                      required
                       value={formValues.fullName}
                       onChange={(event) =>
                         setFormValues((prev) => ({
@@ -399,46 +392,7 @@ export default function TestimoniesPage() {
                     <p className="text-[11px] text-[#ef4444]">{errors.story}</p>
                   ) : null}
                 </div>
-                <div className="grid gap-5 md:grid-cols-[1.2fr_0.8fr]">
-                  <div className="space-y-2">
-                    <label className="text-xs font-semibold tracking-[0.2em] text-[#1f2a44] uppercase">
-                      Add photo or video (optional)
-                    </label>
-                    <label className="flex h-36 cursor-pointer items-center justify-center rounded-2xl border border-dashed border-[#d9deea] bg-[#f8faff] text-center">
-                      <input className="hidden" type="file" />
-                      <div className="flex flex-col items-center gap-2 text-[#8fa1b6]">
-                        <span className="material-symbols-outlined text-3xl">upload</span>
-                        <span className="text-xs font-semibold">Click to upload media</span>
-                      </div>
-                    </label>
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-xs font-semibold tracking-[0.2em] text-[#1f2a44] uppercase">
-                      Privacy
-                    </label>
-                    <div className="flex items-center justify-between rounded-2xl border border-[#e5e7f2] bg-white px-4 py-4">
-                      <div>
-                        <p className="text-sm font-semibold text-[#111827]">Post Anonymously</p>
-                        <p className="mt-1 text-xs text-[#6b7280]">
-                          Hide your name from the public testimony feed.
-                        </p>
-                      </div>
-                      <button
-                        className={`relative h-6 w-11 rounded-full transition-colors ${
-                          anonymous ? "bg-[#2f5be7]" : "bg-[#d7dce6]"
-                        }`}
-                        type="button"
-                        onClick={() => setAnonymous((value) => !value)}
-                      >
-                        <span
-                          className={`absolute top-0.5 size-5 rounded-full bg-white transition-transform ${
-                            anonymous ? "translate-x-5" : "translate-x-1"
-                          }`}
-                        />
-                      </button>
-                    </div>
-                  </div>
-                </div>
+                {/* Removed media upload and anonymous privacy toggle */}
                 <button
                   className="w-full rounded-2xl bg-[#0b2d6e] px-6 py-4 text-sm font-semibold text-white shadow-[0_14px_24px_rgba(15,23,42,0.18)] hover:brightness-110 flex items-center justify-center gap-2 disabled:opacity-70"
                   type="submit"

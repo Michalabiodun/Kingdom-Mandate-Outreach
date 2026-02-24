@@ -20,7 +20,7 @@ export function DynamicTestimonials({
       author: {
         name: "Faith Johnson",
         handle: "Community Leader",
-        avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=800&h=800&fit=crop&crop=face"
+        avatar: ""
       },
       text: "The mentorship and teaching here transformed my leadership and daily walk with God.",
       href: "#"
@@ -29,7 +29,7 @@ export function DynamicTestimonials({
       author: {
         name: "Daniel Okafor",
         handle: "Campus Director",
-        avatar: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=800&h=800&fit=crop&crop=face"
+        avatar: ""
       },
       text: "I found clarity in purpose and practical tools to lead my community with excellence.",
       href: "#"
@@ -38,7 +38,7 @@ export function DynamicTestimonials({
       author: {
         name: "Grace Mensah",
         handle: "Prayer Coordinator",
-        avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=800&h=800&fit=crop&crop=face"
+        avatar: ""
       },
       text: "The community is warm, the teachings are deep, and the impact is undeniable.",
       href: "#"
@@ -47,7 +47,7 @@ export function DynamicTestimonials({
       author: {
         name: "Samuel Adeyemi",
         handle: "Youth Pastor",
-        avatar: "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=800&h=800&fit=crop&crop=face"
+        avatar: ""
       },
       text: "Every session strengthens my faith and equips me to serve with confidence.",
       href: "#"
@@ -56,7 +56,7 @@ export function DynamicTestimonials({
       author: {
         name: "Ruth Abiola",
         handle: "Outreach Volunteer",
-        avatar: "https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=800&h=800&fit=crop&crop=face"
+        avatar: ""
       },
       text: "I feel supported and empowered to fulfill my calling in every sphere.",
       href: "#"
@@ -65,7 +65,7 @@ export function DynamicTestimonials({
       author: {
         name: "Michael Osei",
         handle: "Ministry Partner",
-        avatar: "https://images.unsplash.com/photo-1527980965255-d3b416303d12?w=800&h=800&fit=crop&crop=face"
+        avatar: ""
       },
       text: "Kingdom Mandate has been a steady source of wisdom and encouragement.",
       href: "#"

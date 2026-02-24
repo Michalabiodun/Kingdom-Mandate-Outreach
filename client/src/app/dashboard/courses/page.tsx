@@ -273,7 +273,7 @@ export default function CoursesPage() {
                     className="absolute inset-0 bg-cover bg-center"
                     style={{
                       backgroundImage:
-                        'url("https://images.unsplash.com/photo-1521737604893-d14cc237f11d?q=80&w=1600&auto=format&fit=crop")',
+                        'url("")',
                     }}
                   />
                   <div className="absolute inset-0 bg-black/35" />
